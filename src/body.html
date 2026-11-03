@@ -1,0 +1,22 @@
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Trénink <span class="plan">A</span></h1><span class="store" id="store">Načítám…</span></div>
+    <div class="progress" id="progress" hidden><div class="track"><div class="fill" id="progress-fill" style="width:0"></div></div><span class="num" id="progress-num">0/21</span></div>
+    <div class="tabs" role="tablist">
+      <button id="tab-today" role="tab" aria-selected="true" data-view="today">Dnes</button>
+      <button id="tab-hist" role="tab" aria-selected="false" data-view="hist">Historie</button>
+      <button id="tab-body" role="tab" aria-selected="false" data-view="body">Postava</button>
+      <button id="tab-ov" role="tab" aria-selected="false" data-view="ov">Přehled</button>
+    </div>
+  </header>
+  <main id="app"></main>
+</div>
+<div class="timer" id="timer" hidden>
+  <div class="in">
+    <div class="t" id="timer-t">0:00</div>
+    <div class="what" id="timer-what">Pauza</div>
+    <button id="timer-add" type="button">+30 s</button>
+    <button id="timer-skip" type="button">Hotovo</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
