@@ -76,6 +76,20 @@ const PLAN_IDS = ["A", "B", "C"];
 const ALL = PLAN_IDS.flatMap(id => PLANS[id].items);
 const planId = s => (s && s.pv && PLANS[s.plan]) ? s.plan : "B";
 let pickPlan = null;
+/* before "Začít trénink" the plan is a draft the user can already adjust; it becomes the training on start or on the first ticked set */
+let draftSess = null;
+function getDraft() {
+  const pid = pickPlan || nextPlan();
+  if (!draftSess || draftSess.plan !== pid) draftSess = newSession(pid);
+  return draftSess;
+}
+function beginSession(d) {
+  const now = new Date();
+  d.id = "s" + now.getTime(); d.startedAt = now.toISOString();
+  sessions[d.id] = d; draftSess = null; pickPlan = null; store.save(d);
+  keepAwake(); try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch {}
+  return d;
+}
 /* next plan: A and B alternate, C is the bonus day */
 function nextPlan() {
   const last = sorted().find(x => x.finishedAt && planId(x) !== "C");
@@ -333,14 +347,14 @@ function renderToday() {
 }
 function renderToday2(s) {
   if (!s) {
-    const pid = pickPlan || nextPlan(), preview = newSession(pid);
+    const preview = getDraft(), pid = preview.plan;
     const n = sorted().filter(x => x.finishedAt).length;
     const next = nextPlan();
     return `<div class="intro">
       <div class="plans" role="group" aria-label="Plán">${PLAN_IDS.map(id => `<button type="button" data-a="pick" data-p="${id}" aria-pressed="${id === pid}"><b>${id}</b><span>${PLANS[id].title}</span>${id === next ? "<i>na řadě</i>" : id === "C" ? "<i>bonus</i>" : ""}</button>`).join("")}</div>
-      <p>${n ? `Máš za sebou ${n} ${n === 1 ? "trénink" : n < 5 ? "tréninky" : "tréninků"}. Váhy a opakování níže navazují na poslední trénink se stejnými cviky.` : "Po každé sérii klepni na její dlaždici, zezelená a spustí se pauza."}</p>
+      <p>${n ? `Máš za sebou ${n} ${n === 1 ? "trénink" : n < 5 ? "tréninky" : "tréninků"}. Váhy a opakování navazují na poslední trénink. Upravit je můžeš hned, trénink se spustí tlačítkem nebo první odkliknutou sérií.` : "Váhy a opakování můžeš upravit hned. Po každé sérii klepni na její dlaždici, zezelená a spustí se pauza."}</p>
       <button class="btn" id="start" type="button">Začít trénink ${pid}</button></div>
-      ${PLANS[pid].items.map(p => exHtml(p, preview.ex[p.k], preview.hints[p.k], false, false)).join("")}`;
+      ${planOf(preview).map(p => exHtml(p, preview.ex[p.k], preview.hints[p.k], true, false)).join("")}`;
   }
   const defs = planOf(s);
   const nowK = (defs.find(p => s.ex[p.k].sets.some(x => !x.done)) || {}).k;
@@ -892,17 +906,17 @@ $("#app").addEventListener("input", e => {
 $("#app").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest(".addbox")) { e.preventDefault(); $("#add-go") && $("#add-go").click(); } });
 $("#app").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
-  if (b.id === "start") { const s = newSession(pickPlan || nextPlan()); pickPlan = null; sessions[s.id] = s; store.save(s); keepAwake(); try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch {} render(); window.scrollTo(0, 0); return; }
+  if (b.id === "start") { beginSession(getDraft()); render(); window.scrollTo(0, 0); return; }
   if (b.id !== "discard") pendingDiscard = false;
   const s = active();
   if (b.id === "finish" && s) {
-    s.finishedAt = new Date().toISOString(); store.save(s);
+    s.finishedAt = new Date().toISOString(); store.save(s); draftSess = null;
     clearInterval(tInt); $("#timer").hidden = true; try { wake && wake.release(); } catch {}
     toast("Trénink uložen"); view = "hist"; render(); window.scrollTo(0, 0); return;
   }
   if (b.id === "discard" && s) {
     if (!pendingDiscard) { pendingDiscard = true; render(); return; }
-    pendingDiscard = false; delete sessions[s.id]; store.remove(s.id); clearInterval(tInt); $("#timer").hidden = true; render(); return;
+    pendingDiscard = false; draftSess = null; delete sessions[s.id]; store.remove(s.id); clearInterval(tInt); $("#timer").hidden = true; render(); return;
   }
   const act = b.dataset.act;
   if (act === "del") {
@@ -939,12 +953,19 @@ $("#app").addEventListener("click", e => {
     const card = $("#ex-" + def.k); card && card.scrollIntoView({ block: "center", behavior: smooth() });
     return;
   }
-  if (!s || !act) return;
+  if (!act) return;
+  let s2 = s;
+  if (!s2) { if (view !== "today" || !draftSess) return; s2 = draftSess; if (act === "done") s2 = beginSession(draftSess); }
+  return editAct(b, act, s2);
+});
+function editAct(b, act, s) {
   ensureEx(s);
+  const live = !!sessions[s.id];
+  const save = () => { if (live) store.save(s); };
   const p = planOf(s).find(x => x.k === b.dataset.k), ex = s.ex[p.k];
   if (act === "addset") { const l = ex.sets[ex.sets.length - 1]; ex.sets.push({ reps: l ? l.reps : (p.min || 10), kg: l ? kgOf(ex, l) : ex.kg ?? null, done: false }); }
   if (act === "delset") { if (ex.sets.length > 1 && !ex.sets[ex.sets.length - 1].done) ex.sets.pop(); }
-  if (act === "delex") { s.extra = (s.extra || []).filter(d => d.k !== p.k); delete s.ex[p.k]; if (s.hints) delete s.hints[p.k]; store.save(s); render(); return; }
+  if (act === "delex") { s.extra = (s.extra || []).filter(d => d.k !== p.k); delete s.ex[p.k]; if (s.hints) delete s.hints[p.k]; save(); render(); return; }
   if (act === "kg") {
     const old = ex.kg ?? null;
     ex.kg = stepKg(old, +b.dataset.d, p.inc);
@@ -959,7 +980,7 @@ $("#app").addEventListener("click", e => {
     if (x.done) { popAt = p.k + i; startTimer(p.rest, `${p.name}, série ${i + 1}`); }
     if (x.done && ex.sets.every(y => y.done)) nextUp = true;
   }
-  store.save(s); render();
+  save(); render();
   if (nextUp) {
     nextUp = false;
     const nx = document.querySelector(".ex.now");
@@ -969,6 +990,6 @@ $("#app").addEventListener("click", e => {
     const f = document.querySelector(`[data-act="${act}"][data-k="${p.k}"]${b.dataset.i != null ? `[data-i="${b.dataset.i}"]` : ""}${b.dataset.f ? `[data-f="${b.dataset.f}"]` : ""}${b.dataset.d ? `[data-d="${b.dataset.d}"]` : ""}`);
     if (f) f.focus({ preventScroll: true });
   }
-});
+}
 
 initStore();
