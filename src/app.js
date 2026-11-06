@@ -63,13 +63,13 @@ const PLANS = {
     { k: "rdl",    name: "Romanian deadlift", sets: 3, min: 6, max: 10, kg: 30, inc: 2.5, bar: true, rest: 120 },
   ] },
   C: { title: "Bonus", items: [
-    { k: "hammer",  name: "Hammer pull-ups", note: "Úchop dlaněmi k sobě.", sets: 3, min: 4, max: 6, kg: null, inc: 2.5, band: "heavy", assist: true, rest: 120 },
-    { k: "incdb",   name: "Incline dumbbell press", note: "Dole 2 s pauza. Váha je na jednu ruku.", sets: 3, min: 8, max: 12, kg: 10, inc: 2, perHand: true, rest: 120 },
-    { k: "incpush", name: "Incline push-ups", sets: 3, min: 8, max: 15, kg: null, inc: 2.5, rest: 60 },
-    { k: "ringrow", name: "Ring rows", sets: 3, min: 8, max: 12, kg: null, inc: 2.5, rest: 90 },
+    { k: "hammer",  name: "Hammer pull-ups", note: "Úchop dlaněmi k sobě.", sets: 3, min: 10, max: 10, kg: null, inc: 2.5, band: "heavy", assist: true, rest: 120 },
+    { k: "incdb",   name: "Incline dumbbell press", note: "Dole 2 s pauza. Váha je na jednu ruku.", sets: 3, min: 10, max: 10, kg: 10, inc: 2, perHand: true, rest: 120 },
+    { k: "incpush", name: "Incline push-ups", sets: 3, min: 10, max: 10, kg: null, inc: 2.5, noProg: true, rest: 60 },
+    { k: "ringrow", name: "Ring rows", sets: 3, min: 10, max: 10, kg: null, inc: 2.5, noProg: true, rest: 90 },
     { k: "plank",   name: "Plank", sets: 3, min: 30, max: 60, step: 5, unit: "s", kg: null, inc: 2.5, noProg: true, rest: 60 },
-    { k: "legcurl", name: "Seated leg curls", sets: 3, min: 10, max: 15, kg: null, inc: 2.5, needKg: true, rest: 90 },
-    { k: "legext",  name: "Quadriceps extensions", sets: 3, min: 10, max: 15, kg: null, inc: 2.5, needKg: true, rest: 90 },
+    { k: "legcurl", name: "Seated leg curls", sets: 3, min: 10, max: 10, kg: null, inc: 2.5, needKg: true, rest: 90 },
+    { k: "legext",  name: "Quadriceps extensions", sets: 3, min: 10, max: 10, kg: null, inc: 2.5, needKg: true, rest: 90 },
   ] },
 };
 const PLAN_IDS = ["A", "B", "C"];
@@ -99,7 +99,7 @@ function nextPlan() {
 const BANDS = [["heavy", "silná"], ["medium", "střední"], ["light", "slabá"], ["none", "bez gumy"]];
 const BAND_UI = ["none", "light", "medium", "heavy"];
 /* rep schemes offered when adding an exercise */
-const SCHEMES = [["5", 5, 5], ["6–10", 6, 10], ["8–12", 8, 12], ["12–15", 12, 15], ["max", 0, 0]];
+const SCHEMES = [["10", 10, 10], ["5", 5, 5], ["6–10", 6, 10], ["8–12", 8, 12], ["12–15", 12, 15], ["max", 0, 0]];
 const COMMON = ["Overhead press", "Biceps curl", "Triceps pushdown", "Lateral raise", "Face pull", "Leg press", "Lunges", "Hip thrust", "Calf raise", "Plank"];
 const slug = n => "c-" + n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 /* the session's exercises: plan A plus anything added that day */
@@ -110,7 +110,7 @@ function customDefs() {
   return Object.values(seen);
 }
 function makeDef(name, scheme, sets, kg) {
-  const [, min, max] = SCHEMES.find(x => x[0] === scheme) || SCHEMES[1];
+  const [, min, max] = SCHEMES.find(x => x[0] === scheme) || SCHEMES[0];
   const d = { k: slug(name), name, sets, inc: 2.5, kg, rest: 90, custom: true };
   if (!max) Object.assign(d, { open: true, start: 10 }); else Object.assign(d, { min, max });
   return d;
@@ -366,7 +366,7 @@ function renderToday2(s) {
     </div>`;
 }
 let pendingDiscard = false, pendingDelete = null;
-let draft = { open: false, name: "", scheme: "8–12", sets: 3, kg: "" };
+let draft = { open: false, name: "", scheme: "10", sets: 3, kg: "" };
 function addHtml(s) {
   if (!draft.open) return `<button type="button" class="btn add" id="add-open">+ Přidat cvik</button>`;
   const used = new Set(planOf(s).map(p => p.k));
@@ -923,14 +923,14 @@ $("#app").addEventListener("click", e => {
     if (pendingDelete !== b.dataset.id) { pendingDelete = b.dataset.id; render(); return; }
     delete sessions[pendingDelete]; store.remove(pendingDelete); pendingDelete = null; render(); return;
   }
-  if (b.id === "add-open") { draft = { open: true, name: "", scheme: "8–12", sets: 3, kg: "" }; render(); $("#add-name") && $("#add-name").focus(); return; }
+  if (b.id === "add-open") { draft = { open: true, name: "", scheme: "10", sets: 3, kg: "" }; render(); $("#add-name") && $("#add-name").focus(); return; }
   if (b.id === "add-cancel") { draft.open = false; render(); return; }
   if (act === "scheme") { draft.scheme = b.dataset.s; render(); return; }
   if (act === "dsets") { draft.sets = Math.min(10, Math.max(1, draft.sets + +b.dataset.d)); render(); return; }
   if (act === "pick") {
     draft.name = b.dataset.name; draft.err = "";
     const d = customDefs().find(x => x.k === slug(draft.name));
-    if (d) { draft.scheme = d.open ? "max" : (SCHEMES.find(x => x[1] === d.min && x[2] === d.max) || SCHEMES[1])[0]; draft.sets = d.sets; }
+    if (d) { draft.scheme = d.open ? "max" : (SCHEMES.find(x => x[1] === d.min && x[2] === d.max) || SCHEMES[0])[0]; draft.sets = d.sets; }
     render(); return;
   }
   if (b.id === "add-go" && s) {
@@ -948,7 +948,7 @@ $("#app").addEventListener("click", e => {
     if (kg !== null || !prev) { s.ex[def.k].kg = kg; s.ex[def.k].sets.forEach(x => { x.kg = kg; }); }
     s.ex[def.k].sets = s.ex[def.k].sets.slice(0, def.sets);
     while (s.ex[def.k].sets.length < def.sets) s.ex[def.k].sets.push({ ...s.ex[def.k].sets[s.ex[def.k].sets.length - 1], done: false });
-    draft = { open: false, name: "", scheme: "8–12", sets: 3, kg: "" };
+    draft = { open: false, name: "", scheme: "10", sets: 3, kg: "" };
     store.save(s); render();
     const card = $("#ex-" + def.k); card && card.scrollIntoView({ block: "center", behavior: smooth() });
     return;
