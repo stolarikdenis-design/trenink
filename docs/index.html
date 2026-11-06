@@ -256,6 +256,15 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   @keyframes pop { 40% { transform: scale(1.06); } }
 }
 .filebtn { display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; }
+.plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.plans button { border: 2px solid var(--line); background: var(--sunken); border-radius: 14px; padding: 10px 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; min-width: 0; }
+.plans b { font: 800 30px/1 var(--display); }
+.plans span { font-size: 12.5px; line-height: 1.2; color: var(--muted); font-weight: 600; }
+.plans i { font-style: normal; font: 700 11px var(--display); text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin-top: 2px; }
+.plans button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+.plans button[aria-pressed="true"] span, .plans button[aria-pressed="true"] i { color: var(--bg); }
+.hint.setup { color: var(--ink); background: var(--sunken); border-radius: 10px; padding: 8px 10px; font-size: 13.5px; }
+.sets { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
 </style></head><body>
 <div class="wrap">
   <header class="top">
@@ -293,6 +302,17 @@ const PIC = {
   crunch:`<path d="M7 40l34-15M13 37.5v6M35 28v15.5"/><circle cx="14" cy="22" r="3.4"/><path d="M25 32c-6 0-8-3-9-6M25 32l8-10 8 1"/><path d="M18 27l3-4"/>`,
   squat: `<circle cx="24" cy="8" r="3.4"/><path d="M13 15h22M13 11v8M35 11v8" stroke-width="3.4"/><path d="M24 15l-6 13M18 28h12l-4 13h6M23 16l-3 4"/>`,
   custom:`<path d="M12 24h24" stroke-width="3.4"/><path d="M8 17v14M14 13v22M34 13v22M40 17v14"/>`,
+  ohp:   `<circle cx="22" cy="10" r="3.4"/><path d="M22 15v19h10v8M22 18l-9-3V7M22 18l9-3V7M12 36h16M14 36v7"/><path d="M9 6h8M27 6h8" stroke-width="4"/>`,
+  pullup:`<path d="M4 7h40"/><circle cx="24" cy="15" r="3.4"/><path d="M10 7l8 13M38 7l-8 13M18 20h12M24 20v12M24 32l-3 10M24 32l3 10"/>`,
+  scap:  `<path d="M6 7h36"/><circle cx="24" cy="17" r="3.4"/><path d="M18 7v15M30 7v15M18 22h12M24 22v11M24 33l-3 9M24 33l3 9M11 27l5-3M37 27l-5-3"/>`,
+  incbench:`<path d="M28 37L14 15M28 37h10M30 37v6"/><circle cx="14" cy="11" r="3.2"/><path d="M16 17l10 16 10-2 2 11M18 19l5-12"/><path d="M14 7h18M14 3v8M32 3v8" stroke-width="3.4"/>`,
+  hammer:`<path d="M6 7h36"/><circle cx="24" cy="14" r="3.4"/><path d="M19 7l2 12M29 7l-2 12M21 19h6M24 19v13M24 32l-4 10M24 32l4 10M17 4v6M31 4v6"/>`,
+  incdb: `<path d="M28 37L14 15M28 37h10M30 37v6"/><circle cx="14" cy="11" r="3.2"/><path d="M16 17l10 16 10-2 2 11M18 19l5-12"/><path d="M19 7h8" stroke-width="4.5"/>`,
+  incpush:`<path d="M29 27h13M31 27v16M40 27v16"/><circle cx="35" cy="15" r="3.2"/><path d="M6 42L31 19M31 19l2 8"/>`,
+  ringrow:`<path d="M30 3v14"/><circle cx="30" cy="20" r="2.6"/><circle cx="21" cy="17" r="3.2"/><path d="M8 42l13-19M21 24l7-3M4 43h40"/>`,
+  plank: `<path d="M4 37h40"/><circle cx="40" cy="21" r="3.2"/><path d="M36 25L8 33M33 26v8h7"/>`,
+  legcurl:`<path d="M8 32h22M10 32L8 14M14 32v10"/><circle cx="11" cy="9" r="3.2"/><path d="M12 14l2 15h16l-5 11"/><circle cx="25" cy="41" r="2.6"/>`,
+  legext:`<path d="M8 32h22M10 32L8 14M14 32v10"/><circle cx="11" cy="9" r="3.2"/><path d="M12 14l2 15h16l11-6"/><circle cx="42" cy="22" r="2.6"/>`,
   rdl:   `<circle cx="10" cy="16" r="3.4"/><path d="M14 20l16 5M30 25l-1 9 1 9h-6M17 21l-1 11"/><circle cx="16" cy="36" r="5.5"/>`,
 };
 const pic = (k, cls = "") => `<svg viewBox="0 0 48 48" class="${cls}" aria-hidden="true" ${S}>${PIC[k] || PIC.custom}</svg>`;
@@ -305,15 +325,42 @@ const FACES = {
 const face = f => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="8.5" cy="9.5" r=".9" fill="currentColor"/><circle cx="15.5" cy="9.5" r=".9" fill="currentColor"/>${f === "hard" ? '<path d="M6.5 7l3 1.2M17.5 7l-3 1.2"/>' : ""}<path d="${FACES[f].mouth}"/></svg>`;
 
 /* ---------- plan ---------- */
-const PLAN = [
-  { k: "bench",  name: "Bench press",       sets: 3, min: 5, max: 5,  kg: 52.5, inc: 2.5, bar: true, rest: 180 },
-  { k: "chin",   name: "Chin-ups",          sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120 },
-  { k: "dips",   name: "Dips",              sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120 },
-  { k: "row",    name: "Seated rows",       sets: 3, min: 6, max: 10, kg: 32, inc: 2.5, rest: 90 },
-  { k: "crunch", name: "Decline crunch",    sets: 3, open: true, start: 12, kg: null, inc: 2.5, rest: 60 },
-  { k: "squat",  name: "High bar squat",    sets: 3, min: 6, max: 10, kg: 30, inc: 2.5, bar: true, rest: 150 },
-  { k: "rdl",    name: "Romanian deadlift", sets: 3, min: 6, max: 10, kg: 30, inc: 2.5, bar: true, rest: 120 },
-];
+/* A and C were added later; sessions saved before that (no pv) were plan B */
+const PLANS = {
+  A: { title: "Tlaky a přítahy", items: [
+    { k: "ohp",      name: "Seated double press", note: "Tlaky na ramena vsedě, jednoručky. Váha je na jednu ruku.", sets: 3, min: 6, max: 6, kg: 5, inc: 1, perHand: true, rest: 120 },
+    { k: "pullup",   name: "Přítahy (shyby)", note: "Plán 5×3. Až dáš 5×5, appka navrhne slabší gumu.", sets: 5, min: 3, max: 5, kg: null, inc: 2.5, band: "heavy", assist: true, rest: 120 },
+    { k: "scap",     name: "Závěs + lopatky k sobě", note: "Ve visu stáhni lopatky k sobě a dolů, paže zůstanou rovné.", sets: 5, min: 3, max: 3, kg: null, inc: 2.5, noProg: true, rest: 60 },
+    { k: "incbench", name: "Bench press na horní prsa", note: "Lavice: posunutí 4 zezadu, dva kolíky.", sets: 15, min: 2, max: 2, kg: 50, inc: 2.5, bar: true, rest: 90 },
+  ] },
+  B: { title: "Bench, dřep a mrtvý tah", items: [
+    { k: "bench",  name: "Bench press",       sets: 3, min: 5, max: 5,  kg: 52.5, inc: 2.5, bar: true, rest: 180 },
+    { k: "chin",   name: "Chin-ups",          sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120 },
+    { k: "dips",   name: "Dips",              sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120 },
+    { k: "row",    name: "Seated rows",       sets: 3, min: 6, max: 10, kg: 32, inc: 2.5, rest: 90 },
+    { k: "crunch", name: "Decline crunch",    sets: 3, open: true, start: 12, kg: null, inc: 2.5, rest: 60 },
+    { k: "squat",  name: "High bar squat",    sets: 3, min: 6, max: 10, kg: 30, inc: 2.5, bar: true, rest: 150 },
+    { k: "rdl",    name: "Romanian deadlift", sets: 3, min: 6, max: 10, kg: 30, inc: 2.5, bar: true, rest: 120 },
+  ] },
+  C: { title: "Bonus", items: [
+    { k: "hammer",  name: "Hammer pull-ups", note: "Úchop dlaněmi k sobě.", sets: 3, min: 4, max: 6, kg: null, inc: 2.5, band: "heavy", assist: true, rest: 120 },
+    { k: "incdb",   name: "Incline dumbbell press", note: "Dole 2 s pauza. Váha je na jednu ruku.", sets: 3, min: 8, max: 12, kg: 10, inc: 2, perHand: true, rest: 120 },
+    { k: "incpush", name: "Incline push-ups", sets: 3, min: 8, max: 15, kg: null, inc: 2.5, rest: 60 },
+    { k: "ringrow", name: "Ring rows", sets: 3, min: 8, max: 12, kg: null, inc: 2.5, rest: 90 },
+    { k: "plank",   name: "Plank", sets: 3, min: 30, max: 60, step: 5, unit: "s", kg: null, inc: 2.5, noProg: true, rest: 60 },
+    { k: "legcurl", name: "Seated leg curls", sets: 3, min: 10, max: 15, kg: null, inc: 2.5, needKg: true, rest: 90 },
+    { k: "legext",  name: "Quadriceps extensions", sets: 3, min: 10, max: 15, kg: null, inc: 2.5, needKg: true, rest: 90 },
+  ] },
+};
+const PLAN_IDS = ["A", "B", "C"];
+const ALL = PLAN_IDS.flatMap(id => PLANS[id].items);
+const planId = s => (s && s.pv && PLANS[s.plan]) ? s.plan : "B";
+let pickPlan = null;
+/* next plan: A and B alternate, C is the bonus day */
+function nextPlan() {
+  const last = sorted().find(x => x.finishedAt && planId(x) !== "C");
+  return last && planId(last) === "A" ? "B" : last ? "A" : "A";
+}
 /* order = from most help to none (assisted exercises progress along it) */
 const BANDS = [["heavy", "silná"], ["medium", "střední"], ["light", "slabá"], ["none", "bez gumy"]];
 const BAND_UI = ["none", "light", "medium", "heavy"];
@@ -322,7 +369,7 @@ const SCHEMES = [["5", 5, 5], ["6–10", 6, 10], ["8–12", 8, 12], ["12–15", 
 const COMMON = ["Overhead press", "Biceps curl", "Triceps pushdown", "Lateral raise", "Face pull", "Leg press", "Lunges", "Hip thrust", "Calf raise", "Plank"];
 const slug = n => "c-" + n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 /* the session's exercises: plan A plus anything added that day */
-const planOf = s => PLAN.concat((s && s.extra) || []);
+const planOf = s => PLANS[planId(s)].items.concat((s && s.extra) || []);
 function customDefs() {
   const seen = {};
   sorted().forEach(s => (s.extra || []).forEach(d => { if (!seen[d.k]) seen[d.k] = d; }));
@@ -462,9 +509,10 @@ function suggest(p, exceptId) {
   const same = done.every(x => x.kg === done[0].kg);
   const lastTxt = setsTxt(done, band);
   const feelTxt = last.feel ? ` (${FACES[last.feel].label.toLowerCase()})` : "";
-  const more = cap => ls.map(x => ({ reps: Math.min(cap ?? 999, x.reps + (x.done && !hard ? 1 : 0)), kg: x.kg }));
+  const more = cap => ls.map(x => ({ reps: Math.min(cap ?? 999, x.reps + (x.done && !hard ? (p.step || 1) : 0)), kg: x.kg }));
   const out = { ...base, band, kg: topKg ?? (last.kg ?? null) };
   if (p.open) return { ...out, sets: more(), note: `Minule <b>${lastTxt}</b>${feelTxt}. ${hard ? "Zopakuj to." : "Zkus o 1 víc na sérii."}` };
+  if (p.noProg) return { ...out, sets: p.min === p.max ? ls.map(x => ({ reps: p.min, kg: x.kg })) : more(p.max), note: `Minule <b>${lastTxt}</b>${feelTxt}. ${p.min === p.max ? "Zopakuj to." : "Zkus o kousek víc."}` };
   const maxed = all && done.every(x => x.reps >= p.max) && same && !hard;
   if (maxed && p.assist && band !== "none") {
     const nb = BANDS[Math.min(BANDS.findIndex(b => b[0] === band) + 1, BANDS.length - 1)][0];
@@ -477,10 +525,10 @@ function suggest(p, exceptId) {
   const sets = p.min === p.max ? ls.map(x => ({ reps: p.min, kg: x.kg })) : more(p.max);
   return { ...out, sets, note: `Minule <b>${lastTxt}</b>${feelTxt}. ${hard ? "Zůstaň na stejné zátěži." : p.min === p.max ? "Dodělej všechny série." : "Přidej opakování."}` };
 }
-function newSession() {
+function newSession(pid) {
   const now = new Date();
-  const s = { id: "s" + now.getTime(), plan: "A", startedAt: now.toISOString(), finishedAt: null, ex: {}, hints: {} };
-  PLAN.forEach(p => addEx(s, p)); s.extra = [];
+  const s = { id: "s" + now.getTime(), plan: pid, pv: 2, startedAt: now.toISOString(), finishedAt: null, ex: {}, hints: {} };
+  PLANS[pid].items.forEach(p => addEx(s, p)); s.extra = [];
   return s;
 }
 function addEx(s, p) {
@@ -507,11 +555,12 @@ function platesHtml(kg) {
 function exHtml(p, e, hint, live, isNow) {
   const doneN = e.sets.filter(x => x.done).length;
   const complete = live && doneN === e.sets.length;
-  const tgt = p.open ? `${e.sets.length} série, co nejvíc` : `${e.sets.length} × ${p.min === p.max ? p.min : p.min + "–" + p.max} opakování`;
-  const kgTxt = v => v == null ? "vl. váha" : fmt(v) + " kg";
+  const unit = p.unit === "s" ? "s" : "opakování";
+  const tgt = p.open ? `${e.sets.length} série, co nejvíc` : `${e.sets.length} × ${p.min === p.max ? p.min : p.min + "–" + p.max} ${unit}`;
+  const kgTxt = v => v == null ? (p.needKg ? "nastav kg" : "vl. váha") : fmt(v) + (p.perHand ? " kg/ruka" : " kg");
   const load = `<div class="load-row">
-      <div class="step"><button type="button" data-act="kg" data-k="${p.k}" data-d="-1" aria-label="Ubrat ${fmt(p.inc)} kg všem sériím">−</button><span class="val">${e.kg == null ? "Vlastní váha" : fmt(e.kg) + " kg"}</span><button type="button" data-act="kg" data-k="${p.k}" data-d="1" aria-label="Přidat ${fmt(p.inc)} kg všem sériím">+</button></div>
-      ${p.bar && e.kg != null ? platesHtml(e.kg) : `<span class="hint">${live ? "Nastaví všechny neodcvičené série" : ""}</span>`}
+      <div class="step"><button type="button" data-act="kg" data-k="${p.k}" data-d="-1" aria-label="Ubrat ${fmt(p.inc)} kg všem sériím">−</button><span class="val">${e.kg == null ? (p.needKg ? "Nastav kg" : "Vlastní váha") : fmt(e.kg) + " kg"}</span><button type="button" data-act="kg" data-k="${p.k}" data-d="1" aria-label="Přidat ${fmt(p.inc)} kg všem sériím">+</button></div>
+      ${p.bar && e.kg != null ? platesHtml(e.kg) : `<span class="hint">${p.perHand ? "na jednu ruku" : live ? "Nastaví všechny neodcvičené série" : ""}</span>`}
     </div>
     <div class="band-row"><span class="q">Guma</span><div class="bands" role="group" aria-label="Guma">${BAND_UI.map(b => `<button type="button" data-act="band" data-k="${p.k}" data-b="${b}" aria-pressed="${(e.band || "none") === b}">${bandName(b)}</button>`).join("")}</div></div>`;
   const nextI = e.sets.findIndex(x => !x.done);
@@ -522,11 +571,11 @@ function exHtml(p, e, hint, live, isNow) {
     const pop = popAt === p.k + i ? " pop" : "";
     const odd = kg !== (e.kg ?? null) ? " odd" : "";
     return `<div class="set">
-      <button type="button" class="tile${cls}${pop}" data-act="done" data-k="${p.k}" data-i="${i}" aria-pressed="${x.done}" aria-label="Série ${i + 1}, ${x.reps} opakování, ${kgTxt(kg)}, ${x.done ? "odcvičeno" : "neodcvičeno"}">
+      <button type="button" class="tile${cls}${pop}" data-act="done" data-k="${p.k}" data-i="${i}" aria-pressed="${x.done}" aria-label="Série ${i + 1}, ${x.reps} ${p.unit === "s" ? "sekund" : "opakování"}, ${kgTxt(kg)}, ${x.done ? "odcvičeno" : "neodcvičeno"}">
         <span class="n">Série ${i + 1}</span><span class="r">${x.reps}</span><span class="w${odd}">${kgTxt(kg)}</span>
         <span class="cta">${x.done ? CHECK + "Hotovo" : "Klepni po sérii"}</span>
       </button>
-      <div class="mini"><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: méně opakování">−</button><span>opak.</span><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: více opakování">+</button></div>
+      <div class="mini"><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: méně opakování">−</button><span>${p.unit === "s" ? "s" : "opak."}</span><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: více opakování">+</button></div>
       <div class="mini"><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: ubrat ${fmt(p.inc)} kg">−</button><span>kg</span><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: přidat ${fmt(p.inc)} kg">+</button></div>
     </div>`;
   }).join("");
@@ -539,6 +588,7 @@ function exHtml(p, e, hint, live, isNow) {
       <div><h2>${esc(p.name)}</h2><div class="sub">${tgt}</div></div>
       ${tag}
     </div>
+    ${p.note ? `<p class="hint setup">${esc(p.note)}</p>` : ""}
     ${hint ? `<p class="hint${hint.up ? " up" : ""}">${hint.note}</p>` : ""}
     <div class="load">${load}</div>
     ${p.bar && warmup(e.kg) ? `<p class="hint warm">Rozcvička: ${warmup(e.kg)}</p>` : ""}
@@ -554,11 +604,14 @@ function renderToday() {
 }
 function renderToday2(s) {
   if (!s) {
-    const preview = newSession();
+    const pid = pickPlan || nextPlan(), preview = newSession(pid);
     const n = sorted().filter(x => x.finishedAt).length;
-    return `<div class="intro"><p>${n ? `Máš za sebou ${n} ${n === 1 ? "trénink" : n < 5 ? "tréninky" : "tréninků"}. Váhy a opakování níže navazují na poslední trénink.` : "Plán A: tlaky, přítahy, dřep a rumunský mrtvý tah. Po každé sérii klepni na její dlaždici, zezelená a spustí se pauza."}</p>
-      <button class="btn" id="start" type="button">Začít trénink</button></div>
-      ${PLAN.map(p => exHtml(p, preview.ex[p.k], preview.hints[p.k], false, false)).join("")}`;
+    const next = nextPlan();
+    return `<div class="intro">
+      <div class="plans" role="group" aria-label="Plán">${PLAN_IDS.map(id => `<button type="button" data-a="pick" data-p="${id}" aria-pressed="${id === pid}"><b>${id}</b><span>${PLANS[id].title}</span>${id === next ? "<i>na řadě</i>" : id === "C" ? "<i>bonus</i>" : ""}</button>`).join("")}</div>
+      <p>${n ? `Máš za sebou ${n} ${n === 1 ? "trénink" : n < 5 ? "tréninky" : "tréninků"}. Váhy a opakování níže navazují na poslední trénink se stejnými cviky.` : "Po každé sérii klepni na její dlaždici, zezelená a spustí se pauza."}</p>
+      <button class="btn" id="start" type="button">Začít trénink ${pid}</button></div>
+      ${PLANS[pid].items.map(p => exHtml(p, preview.ex[p.k], preview.hints[p.k], false, false)).join("")}`;
   }
   const defs = planOf(s);
   const nowK = (defs.find(p => s.ex[p.k].sets.some(x => !x.done)) || {}).k;
@@ -594,7 +647,7 @@ function addHtml(s) {
 function renderHist() {
   const done = sorted().filter(s => s.finishedAt);
   if (!done.length) return `<p class="empty">Zatím žádný dokončený trénink. Po prvním tréninku se tu objeví série, váhy, pocity a rekordy.</p>`;
-  const best = PLAN.concat(customDefs()).map(p => {
+  const best = ALL.concat(customDefs()).map(p => {
     let v = null;
     done.forEach(s => { const e = s.ex[p.k]; if (!e) return;
       const ok = e.sets.filter(x => x.done).map(x => ({ reps: x.reps, kg: kgOf(e, x) }));
@@ -617,10 +670,10 @@ function renderHist() {
     const mins = Math.round((new Date(s.finishedAt) - d) / 60000);
     let vol = 0;
     const rows = planOf(s).map(p => { const e = s.ex[p.k]; if (!e) return "";
-      e.sets.forEach(x => { const k = kgOf(e, x); if (x.done && k) vol += k * x.reps; });
+      e.sets.forEach(x => { const k = kgOf(e, x); if (x.done && k) vol += k * x.reps * (p.perHand ? 2 : 1); });
       const ok = e.sets.filter(x => x.done).map(x => ({ reps: x.reps, kg: kgOf(e, x) }));
       return `<div class="row">${pic(p.k, "ic")}<span>${esc(p.name)}</span><span class="val">${setsTxt(ok, e.band)}</span><span class="fc ${e.feel || ""}" title="${e.feel ? FACES[e.feel].label : ""}">${e.feel ? face(e.feel) : ""}</span></div>`; }).join("");
-    return `<article class="day"><div class="day-head"><h3>${d.toLocaleDateString("cs-CZ", { weekday: "short", day: "numeric", month: "numeric", year: "numeric" })}</h3>
+    return `<article class="day"><div class="day-head"><h3>${d.toLocaleDateString("cs-CZ", { weekday: "short", day: "numeric", month: "numeric", year: "numeric" })} · ${planId(s)}</h3>
       <span class="hint">${mins} min${vol ? ` · ${Math.round(vol).toLocaleString("cs-CZ")} kg` : ""}</span></div>${rows}
       <div><button type="button" class="linkbtn${pendingDelete === s.id ? " danger" : ""}" data-act="del" data-id="${s.id}">${pendingDelete === s.id ? "Opravdu smazat? Klepni znovu" : "Smazat"}</button></div></article>`;
   }).join("");
@@ -631,6 +684,7 @@ function render() {
   $("#app").innerHTML = view === "today" ? renderToday() : view === "hist" ? renderHist() : view === "body" ? renderBody() : renderOv();
   if (fid && $("#" + fid)) { const el = $("#" + fid); el.focus({ preventScroll: true }); try { el.setSelectionRange(sel[0], sel[1]); } catch {} }
   popAt = null;
+  const cur = active(); $(".plan").textContent = cur ? planId(cur) : (pickPlan || nextPlan());
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === view));
   const s = active();
   $("#progress").hidden = !s;
@@ -782,7 +836,7 @@ function statsOf(list) {
     let v = 0;
     planOf(s).forEach(p => { const e = s.ex[p.k]; if (!e) return;
       if (e.feel) st.feel[e.feel]++;
-      e.sets.forEach(x => { if (!x.done) return; st.sets++; st.reps += x.reps; const k = kgOf(e, x); if (k) v += k * x.reps; }); });
+      e.sets.forEach(x => { if (!x.done) return; st.sets++; st.reps += x.reps; const k = kgOf(e, x); if (k) v += k * x.reps * (p.perHand ? 2 : 1); }); });
     st.vol += v; s._vol = v;
   });
   return st;
@@ -799,7 +853,7 @@ function bestOf(p, list) {
   });
   return v;
 }
-function defsIn(list) { const seen = {}; list.forEach(s => planOf(s).forEach(p => { if (!seen[p.k]) seen[p.k] = p; })); return PLAN.concat(Object.values(seen).filter(p => p.custom)); }
+function defsIn(list) { const seen = {}; list.forEach(s => planOf(s).forEach(p => { if (!seen[p.k]) seen[p.k] = p; })); return ALL.concat(Object.values(seen).filter(p => p.custom)); }
 function bodyIn(P) { return bodySorted().filter(e => { const m = weekMonday(e.week); return m >= new Date(P.from.getTime() - 6 * DAY) && m < P.to; }); }
 function report(P) {
   const all = doneSessions(), list = inPeriod(all, P).slice().reverse();
@@ -943,7 +997,7 @@ function pdfSessions(P, list) {
       const ok = e.sets.filter(x => x.done).map(x => ({ reps: x.reps, kg: kgOf(e, x) })); if (!ok.length) return null;
       return [p.name, setsTxt(ok, e.band), feelWord(e.feel)]; }).filter(Boolean);
     const mins = Math.round((new Date(s.finishedAt) - new Date(s.startedAt)) / 60000);
-    P.need(14 + rows.length * 6.4); P.font(10.5, true); P.text(new Date(s.startedAt).toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "numeric", year: "numeric" }), P.M);
+    P.need(14 + rows.length * 6.4); P.font(10.5, true); P.text(new Date(s.startedAt).toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "numeric", year: "numeric" }) + ` · trénink ${planId(s)}`, P.M);
     P.font(8.5, false, "muted"); P.text(`${mins} min · ${kgShort(s._vol || 0)}`, P.M + P.Wd, { align: "right" }); P.y += 6;
     P.table(["Cvik", "Série", "Pocit"], rows.length ? rows : [["—", "nic neodcvičeno", ""]], [30, 52, 14], ["l", "l", "l"]);
   });
@@ -1075,6 +1129,7 @@ document.getElementById("app").addEventListener("click", e => {
     if (Object.keys(bodyDraft.v).every(k => out[k] === null)) { bodyMsg = "Vyplň aspoň váhu nebo jednu míru."; render(); return; }
     body[out.id] = out; bodyStore.save(out); bodyDraft = null; bodyMsg = ""; toast("Míry uloženy"); render(); return;
   }
+  if (a === "pick") { pickPlan = b.dataset.p; render(); return; }
   if (a === "ovmode") { ov = { mode: b.dataset.m, offset: 0 }; pdfMsg = ""; render(); return; }
   if (a === "ovnav") { ov.offset = Math.min(0, ov.offset + +b.dataset.d); pdfMsg = ""; render(); return; }
   if (a === "pdf") { savePdf(b.dataset.scope, b); return; }
@@ -1098,7 +1153,7 @@ $("#app").addEventListener("input", e => {
 $("#app").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest(".addbox")) { e.preventDefault(); $("#add-go") && $("#add-go").click(); } });
 $("#app").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
-  if (b.id === "start") { const s = newSession(); sessions[s.id] = s; store.save(s); keepAwake(); try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch {} render(); window.scrollTo(0, 0); return; }
+  if (b.id === "start") { const s = newSession(pickPlan || nextPlan()); pickPlan = null; sessions[s.id] = s; store.save(s); keepAwake(); try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch {} render(); window.scrollTo(0, 0); return; }
   if (b.id !== "discard") pendingDiscard = false;
   const s = active();
   if (b.id === "finish" && s) {
@@ -1158,7 +1213,7 @@ $("#app").addEventListener("click", e => {
   if (act === "skg") { const x = ex.sets[+b.dataset.i]; x.kg = stepKg(kgOf(ex, x), +b.dataset.d, p.inc); }
   if (act === "band") ex.band = b.dataset.b;
   if (act === "feel") ex.feel = ex.feel === b.dataset.f ? null : b.dataset.f;
-  if (act === "rep") { const x = ex.sets[+b.dataset.i]; x.reps = Math.max(0, x.reps + +b.dataset.d); }
+  if (act === "rep") { const x = ex.sets[+b.dataset.i]; x.reps = Math.max(0, x.reps + +b.dataset.d * (p.step || 1)); }
   if (act === "done") {
     const i = +b.dataset.i, x = ex.sets[i]; x.done = !x.done;
     if (x.done) { popAt = p.k + i; startTimer(p.rest, `${p.name}, série ${i + 1}`); }
