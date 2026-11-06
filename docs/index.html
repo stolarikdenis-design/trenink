@@ -538,6 +538,15 @@ function addEx(s, p) {
     s.hints[p.k] = { note: g.note, up: g.up };
   }
 }
+/* a session from an older version can miss exercises of its plan: add them, never crash */
+function ensureEx(s) {
+  if (!s || !s.ex) return false;
+  let fixed = false;
+  s.hints = s.hints || {};
+  planOf(s).forEach(p => { const e = s.ex[p.k];
+    if (!e || !Array.isArray(e.sets) || !e.sets.length) { addEx(s, p); fixed = true; } });
+  return fixed;
+}
 function plates(kg) {
   let side = (kg - BAR) / 2; const out = [];
   if (side < 0) return null;
@@ -680,6 +689,14 @@ function renderHist() {
   return `<h2 class="sec">Nejlepší výkon</h2><div class="prs">${best}</div><h2 class="sec">Tréninky</h2><div class="hist">${days}</div>`;
 }
 function render() {
+  try { render2(); }
+  catch (err) {
+    console.error(err);
+    $("#app").innerHTML = `<section class="card"><h2>Něco se pokazilo</h2><p class="hint err">${esc(err && err.message || err)}</p><p class="hint">Data zůstala uložená. Zkus appku zavřít a otevřít znovu. Pokud chyba zůstane, pošli tenhle text.</p></section>`;
+  }
+}
+function render2() {
+  { const cur = active(); if (cur && ensureEx(cur)) store.save(cur); }
   const a = document.activeElement, fid = a && a.id && a.tagName === "INPUT" ? a.id : null, sel = fid ? [a.selectionStart, a.selectionEnd] : null;
   $("#app").innerHTML = view === "today" ? renderToday() : view === "hist" ? renderHist() : view === "body" ? renderBody() : renderOv();
   if (fid && $("#" + fid)) { const el = $("#" + fid); el.focus({ preventScroll: true }); try { el.setSelectionRange(sel[0], sel[1]); } catch {} }
@@ -1201,6 +1218,7 @@ $("#app").addEventListener("click", e => {
     return;
   }
   if (!s || !act) return;
+  ensureEx(s);
   const p = planOf(s).find(x => x.k === b.dataset.k), ex = s.ex[p.k];
   if (act === "addset") { const l = ex.sets[ex.sets.length - 1]; ex.sets.push({ reps: l ? l.reps : (p.min || 10), kg: l ? kgOf(ex, l) : ex.kg ?? null, done: false }); }
   if (act === "delset") { if (ex.sets.length > 1 && !ex.sets[ex.sets.length - 1].done) ex.sets.pop(); }
