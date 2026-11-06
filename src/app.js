@@ -1,3 +1,14 @@
+/* any uncaught error is shown on screen, so a screenshot tells what broke */
+const APP_VERSION = "__VERSION__";
+function showError(msg) {
+  try {
+    let el = document.getElementById("errbar");
+    if (!el) { el = document.createElement("div"); el.id = "errbar"; el.setAttribute("role", "alert"); document.body.appendChild(el); }
+    el.textContent = "Chyba (verze " + APP_VERSION + "): " + msg;
+  } catch {}
+}
+window.addEventListener("error", e => showError((e.message || "neznámá") + (e.lineno ? " @" + e.lineno + ":" + e.colno : "")));
+window.addEventListener("unhandledrejection", e => showError("async: " + ((e.reason && (e.reason.message || e.reason.code)) || e.reason)));
 /* in claude.ai the page gets db/downloads; installed on the phone it keeps data in the browser */
 const IS_ARTIFACT = !!(window.claude && window.claude.use);
 const LOCAL_NOTE = IS_ARTIFACT ? "Jen v tomto prohlížeči" : "Uloženo v telefonu";
@@ -401,6 +412,7 @@ function render() {
   try { render2(); }
   catch (err) {
     console.error(err);
+    showError(String(err && err.stack || err).slice(0, 300));
     $("#app").innerHTML = `<section class="card"><h2>Něco se pokazilo</h2><p class="hint err">${esc(err && err.message || err)}</p><p class="hint">Data zůstala uložená. Zkus appku zavřít a otevřít znovu. Pokud chyba zůstane, pošli tenhle text.</p></section>`;
   }
 }
@@ -654,6 +666,7 @@ function renderOv() {
     ${backupMsg ? `<p class="hint${backupMsg.startsWith("Hotovo") || backupMsg.startsWith("Nahráno") ? "" : " err"}">${backupMsg}</p>` : ""}
     <div class="pdfs"><button type="button" class="btn ghost" data-a="backup">Stáhnout zálohu</button><label class="btn ghost filebtn" for="backup-file">Nahrát zálohu</label></div>
     <input id="backup-file" type="file" accept=".json,application/json" hidden>
+    <p class="hint">Verze aplikace ${APP_VERSION}${IS_ARTIFACT ? " · claude.ai" : " · telefon"}</p>
   </section>`;
 }
 
