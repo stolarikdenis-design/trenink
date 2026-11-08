@@ -240,7 +240,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   @keyframes pop { 40% { transform: scale(1.06); } }
 }
 .filebtn { display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; }
-.plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .plans button { border: 2px solid var(--line); background: var(--sunken); border-radius: 14px; padding: 10px 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; min-width: 0; }
 .plans b { font: 800 30px/1 var(--display); }
 .plans span { font-size: 12.5px; line-height: 1.2; color: var(--muted); font-weight: 600; }

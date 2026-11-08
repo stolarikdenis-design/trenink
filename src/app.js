@@ -33,9 +33,14 @@ const PIC = {
   plank: `<path d="M4 37h40"/><circle cx="40" cy="21" r="3.2"/><path d="M36 25L8 33M33 26v8h7"/>`,
   legcurl:`<path d="M8 32h22M10 32L8 14M14 32v10"/><circle cx="11" cy="9" r="3.2"/><path d="M12 14l2 15h16l-5 11"/><circle cx="25" cy="41" r="2.6"/>`,
   legext:`<path d="M8 32h22M10 32L8 14M14 32v10"/><circle cx="11" cy="9" r="3.2"/><path d="M12 14l2 15h16l11-6"/><circle cx="42" cy="22" r="2.6"/>`,
+  lunge: `<circle cx="24" cy="8" r="3.4"/><path d="M24 13v13l10 4v12M24 26l-8 12-8 2M24 16l-4 9M4 43h40"/><path d="M17 27h6" stroke-width="4"/>`,
+  lyingcurl:`<path d="M6 31h34M10 31v11M36 31v11"/><circle cx="8" cy="23" r="3.2"/><path d="M12 27h24l-4-11"/><circle cx="31" cy="14" r="2.6"/>`,
+  legraise:`<path d="M10 4v40M10 20h18M28 20v24"/><circle cx="16" cy="9" r="3.2"/><path d="M16 14v14h20M16 17l6 3"/>`,
   rdl:   `<circle cx="10" cy="16" r="3.4"/><path d="M14 20l16 5M30 25l-1 9 1 9h-6M17 21l-1 11"/><circle cx="16" cy="36" r="5.5"/>`,
 };
-const pic = (k, cls = "") => `<svg viewBox="0 0 48 48" class="${cls}" aria-hidden="true" ${S}>${PIC[k] || PIC.custom}</svg>`;
+/* exercises that share a drawing */
+const PIC_ALIAS = { dbpress: "ohp", scapshrug: "scap", apullup: "pullup", smithinc: "incbench", smithrow: "ringrow" };
+const pic = (k, cls = "") => `<svg viewBox="0 0 48 48" class="${cls}" aria-hidden="true" ${S}>${PIC[k] || PIC[PIC_ALIAS[k]] || PIC.custom}</svg>`;
 const CHECK = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 const FACES = {
   easy: { label: "Lehké",  mouth: "M7.5 13.5q4.5 5 9 0" },
@@ -47,13 +52,13 @@ const face = f => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" strok
 /* ---------- plan ---------- */
 /* A and C were added later; sessions saved before that (no pv) were plan B */
 const PLANS = {
-  A: { title: "Tlaky a přítahy", items: [
+  A: { title: "Tlaky a přítahy (starší)", items: [
     { k: "ohp",      name: "Seated double press", note: "Tlaky na ramena vsedě, jednoručky. Váha je na jednu ruku.", sets: 3, min: 6, max: 6, kg: 5, inc: 1, perHand: true, rest: 120 },
     { k: "pullup",   name: "Přítahy (shyby)", note: "Plán 5×3. Až dáš 5×5, appka navrhne slabší gumu.", sets: 5, min: 3, max: 5, kg: null, inc: 2.5, band: "heavy", assist: true, rest: 120 },
     { k: "scap",     name: "Závěs + lopatky k sobě", note: "Ve visu stáhni lopatky k sobě a dolů, paže zůstanou rovné.", sets: 5, min: 3, max: 3, kg: null, inc: 2.5, noProg: true, rest: 60 },
     { k: "incbench", name: "Bench press na horní prsa", note: "Lavice: posunutí 4 zezadu, dva kolíky.", sets: 15, min: 2, max: 2, kg: 50, inc: 2.5, bar: true, rest: 90 },
   ] },
-  B: { title: "Bench, dřep a mrtvý tah", items: [
+  B: { title: "Day 1 · bench, dřep, RDL", items: [
     { k: "bench",  name: "Bench press",       sets: 3, min: 5, max: 5,  kg: 52.5, inc: 2.5, bar: true, rest: 180 },
     { k: "chin",   name: "Chin-ups",          sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120 },
     { k: "dips",   name: "Dips",              sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120 },
@@ -62,7 +67,17 @@ const PLANS = {
     { k: "squat",  name: "High bar squat",    sets: 3, min: 6, max: 10, kg: 30, inc: 2.5, bar: true, rest: 150 },
     { k: "rdl",    name: "Romanian deadlift", sets: 3, min: 6, max: 10, kg: 30, inc: 2.5, bar: true, rest: 120 },
   ] },
-  C: { title: "Bonus", items: [
+  D: { title: "Day 2 · jednoručky, smith, výpady", items: [
+    { k: "dbpress",   name: "Seated dumbbell press", note: "Váha je na jednu ruku.", sets: 3, min: 6, max: 10, kg: 7.5, inc: 2.5, perHand: true, rest: 120 },
+    { k: "scapshrug", name: "Hanging scapula shrugs", note: "Ve visu jen lopatky nahoru a dolů, paže rovné.", sets: 2, min: 6, max: 10, kg: null, inc: 2.5, noProg: true, rest: 60 },
+    { k: "apullup",   name: "Assisted pull-ups", sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "heavy", assist: true, rest: 120 },
+    { k: "smithinc",  name: "Incline press (Smith)", sets: 3, min: 6, max: 10, kg: 52.5, inc: 2.5, rest: 150 },
+    { k: "smithrow",  name: "Smith machine rows", note: "Přítahy vlastní vahou pod osou Smithova stroje.", sets: 3, min: 6, max: 10, kg: null, inc: 2.5, noProg: true, rest: 90 },
+    { k: "lunge",     name: "Walking lunges", note: "Chůze s jednoručkami 2 × 5 kg. Opakování = kroky na každou nohu.", sets: 3, min: 6, max: 10, kg: 5, inc: 2.5, perHand: true, rest: 120 },
+    { k: "lyingcurl", name: "Lying leg curls", note: "Dolů pomalu, 3 s.", sets: 3, min: 6, max: 10, kg: 20, inc: 2.5, rest: 90 },
+    { k: "legraise",  name: "Supported leg lifts", sets: 3, min: 6, max: 10, kg: null, inc: 2.5, noProg: true, rest: 60 },
+  ] },
+  C: { title: "Day 3 · bonus", items: [
     { k: "hammer",  name: "Hammer pull-ups", note: "Úchop dlaněmi k sobě.", sets: 3, min: 10, max: 10, kg: null, inc: 2.5, band: "heavy", assist: true, rest: 120 },
     { k: "incdb",   name: "Incline dumbbell press", note: "Dole 2 s pauza. Váha je na jednu ruku.", sets: 3, min: 10, max: 10, kg: 10, inc: 2, perHand: true, rest: 120 },
     { k: "incpush", name: "Incline push-ups", sets: 3, min: 10, max: 10, kg: null, inc: 2.5, noProg: true, rest: 60 },
@@ -72,7 +87,8 @@ const PLANS = {
     { k: "legext",  name: "Quadriceps extensions", sets: 3, min: 10, max: 10, kg: null, inc: 2.5, needKg: true, rest: 90 },
   ] },
 };
-const PLAN_IDS = ["A", "B", "C"];
+/* display order; B (Day 1) and D (Day 2) alternate, C is the bonus day, A stays available */
+const PLAN_IDS = ["B", "D", "C", "A"];
 const ALL = PLAN_IDS.flatMap(id => PLANS[id].items);
 const planId = s => (s && s.pv && PLANS[s.plan]) ? s.plan : "B";
 let pickPlan = null;
@@ -90,10 +106,10 @@ function beginSession(d) {
   keepAwake(); try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch {}
   return d;
 }
-/* next plan: A and B alternate, C is the bonus day */
+/* next plan: B (Day 1) and D (Day 2) alternate */
 function nextPlan() {
-  const last = sorted().find(x => x.finishedAt && planId(x) !== "C");
-  return last && planId(last) === "A" ? "B" : last ? "A" : "A";
+  const last = sorted().find(x => x.finishedAt && (planId(x) === "B" || planId(x) === "D"));
+  return last && planId(last) === "B" ? "D" : "B";
 }
 /* order = from most help to none (assisted exercises progress along it) */
 const BANDS = [["heavy", "silná"], ["medium", "střední"], ["light", "slabá"], ["none", "bez gumy"]];
@@ -351,7 +367,7 @@ function renderToday2(s) {
     const n = sorted().filter(x => x.finishedAt).length;
     const next = nextPlan();
     return `<div class="intro">
-      <div class="plans" role="group" aria-label="Plán">${PLAN_IDS.map(id => `<button type="button" data-a="pick" data-p="${id}" aria-pressed="${id === pid}"><b>${id}</b><span>${PLANS[id].title}</span>${id === next ? "<i>na řadě</i>" : id === "C" ? "<i>bonus</i>" : ""}</button>`).join("")}</div>
+      <div class="plans" role="group" aria-label="Plán">${PLAN_IDS.map(id => `<button type="button" data-a="pick" data-p="${id}" aria-pressed="${id === pid}"><b>${id}</b><span>${PLANS[id].title}</span>${id === next ? "<i>na řadě</i>" : id === "C" ? "<i>bonus</i>" : id === "A" ? "<i>mimo pořadí</i>" : ""}</button>`).join("")}</div>
       <p>${n ? `Máš za sebou ${n} ${n === 1 ? "trénink" : n < 5 ? "tréninky" : "tréninků"}. Váhy a opakování navazují na poslední trénink. Upravit je můžeš hned, trénink se spustí tlačítkem nebo první odkliknutou sérií.` : "Váhy a opakování můžeš upravit hned. Po každé sérii klepni na její dlaždici, zezelená a spustí se pauza."}</p>
       <button class="btn" id="start" type="button">Začít trénink ${pid}</button></div>
       ${planOf(preview).map(p => exHtml(p, preview.ex[p.k], preview.hints[p.k], true, false)).join("")}`;
