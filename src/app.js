@@ -285,7 +285,8 @@ function addEx(s, p) {
   {
     const g = suggest(p, s.id);
     s.ex[p.k] = { kg: g.kg ?? null, band: g.band || "none", feel: null, sets: g.sets.map(x => ({ reps: x.reps, kg: x.kg ?? null, done: false })) };
-    s.hints[p.k] = { note: g.note, up: g.up };
+    const prev = lastOf(p.k, s.id);
+    s.hints[p.k] = { note: g.note, up: g.up, prevNote: prev && prev.note ? prev.note : "" };
   }
 }
 /* a session from an older version can miss exercises of its plan: add them, never crash */
@@ -353,7 +354,9 @@ function exHtml(p, e, hint, live, isNow) {
     ${p.bar && warmup(e.kg) ? `<p class="hint warm">Rozcvička: ${warmup(e.kg)}</p>` : ""}
     <div class="sets">${sets}</div>
     ${live ? `<div class="set-tools"><button type="button" class="linkbtn" data-act="addset" data-k="${p.k}">+ série</button>${e.sets.length > 1 && !e.sets[e.sets.length - 1].done ? `<button type="button" class="linkbtn" data-act="delset" data-k="${p.k}">− série</button>` : ""}${p.custom && !e.sets.some(x => x.done) ? `<button type="button" class="linkbtn danger" data-act="delex" data-k="${p.k}">Odebrat cvik</button>` : ""}</div>` : ""}
+    ${hint && hint.prevNote ? `<p class="hint prevnote"><b>Minule sis poznamenal:</b> ${esc(hint.prevNote)}</p>` : ""}
     ${feel}
+    ${live ? `<label class="note" for="note-${p.k}"><span class="q">Poznámka</span><textarea id="note-${p.k}" data-note="${p.k}" rows="2" maxlength="500" placeholder="Např. nastavení stroje, jak se to cítilo, co příště změnit">${esc(e.note || "")}</textarea></label>` : ""}
   </section>`;
 }
 function renderToday() {
@@ -431,7 +434,7 @@ function renderHist() {
     const rows = planOf(s).map(p => { const e = s.ex[p.k]; if (!e) return "";
       e.sets.forEach(x => { const k = kgOf(e, x); if (x.done && k) vol += k * x.reps * (p.perHand ? 2 : 1); });
       const ok = e.sets.filter(x => x.done).map(x => ({ reps: x.reps, kg: kgOf(e, x) }));
-      return `<div class="row">${pic(p.k, "ic")}<span>${esc(p.name)}</span><span class="val">${setsTxt(ok, e.band)}</span><span class="fc ${e.feel || ""}" title="${e.feel ? FACES[e.feel].label : ""}">${e.feel ? face(e.feel) : ""}</span></div>`; }).join("");
+      return `<div class="row">${pic(p.k, "ic")}<span>${esc(p.name)}</span><span class="val">${setsTxt(ok, e.band)}</span><span class="fc ${e.feel || ""}" title="${e.feel ? FACES[e.feel].label : ""}">${e.feel ? face(e.feel) : ""}</span></div>${e.note ? `<p class="rownote">${esc(e.note)}</p>` : ""}`; }).join("");
     return `<article class="day"><div class="day-head"><h3>${d.toLocaleDateString("cs-CZ", { weekday: "short", day: "numeric", month: "numeric", year: "numeric" })} · ${planId(s)}</h3>
       <span class="hint">${mins} min${vol ? ` · ${Math.round(vol).toLocaleString("cs-CZ")} kg` : ""}</span></div>${rows}
       <div><button type="button" class="linkbtn${pendingDelete === s.id ? " danger" : ""}" data-act="del" data-id="${s.id}">${pendingDelete === s.id ? "Opravdu smazat? Klepni znovu" : "Smazat"}</button></div></article>`;
@@ -448,7 +451,7 @@ function render() {
 }
 function render2() {
   { const cur = active(); if (cur && ensureEx(cur)) store.save(cur); }
-  const a = document.activeElement, fid = a && a.id && a.tagName === "INPUT" ? a.id : null, sel = fid ? [a.selectionStart, a.selectionEnd] : null;
+  const a = document.activeElement, fid = a && a.id && (a.tagName === "INPUT" || a.tagName === "TEXTAREA") ? a.id : null, sel = fid ? [a.selectionStart, a.selectionEnd] : null;
   $("#app").innerHTML = view === "today" ? renderToday() : view === "hist" ? renderHist() : view === "body" ? renderBody() : renderOv();
   if (fid && $("#" + fid)) { const el = $("#" + fid); el.focus({ preventScroll: true }); try { el.setSelectionRange(sel[0], sel[1]); } catch {} }
   popAt = null;
@@ -769,6 +772,8 @@ function pdfSessions(P, list) {
     P.need(14 + rows.length * 6.4); P.font(10.5, true); P.text(new Date(s.startedAt).toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "numeric", year: "numeric" }) + ` · trénink ${planId(s)}`, P.M);
     P.font(8.5, false, "muted"); P.text(`${mins} min · ${kgShort(s._vol || 0)}`, P.M + P.Wd, { align: "right" }); P.y += 6;
     P.table(["Cvik", "Série", "Pocit"], rows.length ? rows : [["—", "nic neodcvičeno", ""]], [30, 52, 14], ["l", "l", "l"]);
+    const notes = planOf(s).filter(p => s.ex[p.k] && s.ex[p.k].note).map(p => `${p.name}: ${s.ex[p.k].note}`);
+    if (notes.length) { P.y -= 2; notes.forEach(n => P.para("Poznámka · " + n, "ink", 8.8)); P.y += 3; }
   });
 }
 function pdfBody(P, bodies, ref) {
@@ -877,6 +882,13 @@ document.getElementById("app").addEventListener("change", async e => {
     backupMsg = `Nahráno ${n} tréninků a ${m} týdnů měr.`;
   } catch { backupMsg = "Tohle není záloha z tréninkové appky."; }
   e.target.value = ""; render();
+});
+/* exercise notes: typing never re-renders, the training saves shortly after */
+document.getElementById("app").addEventListener("input", e => {
+  const k = e.target.dataset && e.target.dataset.note; if (!k) return;
+  const s = active() || draftSess; if (!s || !s.ex[k]) return;
+  s.ex[k].note = e.target.value.slice(0, 500);
+  if (sessions[s.id]) store.save(s);
 });
 document.getElementById("app").addEventListener("input", e => {
   const k = e.target.dataset && e.target.dataset.b; if (!k || !bodyDraft) return;
