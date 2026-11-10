@@ -327,31 +327,42 @@ function platesHtml(kg) {
   const ps = r.out.map(p => `<i style="height:${PH[p]}px;background:var(${PCOL[p]})" title="${fmt(p)} kg"></i>`).join("");
   return `<div class="plates" aria-label="Na každou stranu: ${r.out.map(fmt).join(" + ") || "nic"} kg"><span class="bar"></span>${ps}<small>${r.out.length ? r.out.map(fmt).join(" + ") + " kg / strana" : "jen osa 20 kg"}${r.rest ? ` (chybí ${fmt(r.rest)} kg)` : ""}</small></div>`;
 }
+/* finished exercises fold into one line; tap to open again */
+const openEx = {}, bandOpen = {};
 function exHtml(p, e, hint, live, isNow) {
   const doneN = e.sets.filter(x => x.done).length;
   const complete = live && doneN === e.sets.length;
   const unit = p.unit === "s" ? "s" : "opakování";
   const tgt = p.open ? `${e.sets.length} série, co nejvíc` : `${e.sets.length} × ${p.min === p.max ? p.min : p.min + "–" + p.max} ${unit}`;
   const kgTxt = v => v == null ? (p.needKg ? "nastav kg" : "vl. váha") : fmt(v) + (p.perHand ? " kg/ruka" : " kg");
+  if (complete && !openEx[p.k]) {
+    const ok = e.sets.map(x => ({ reps: x.reps, kg: kgOf(e, x) }));
+    return `<section class="ex complete folded" id="ex-${p.k}">
+      <button type="button" class="fold" data-act="expand" data-k="${p.k}" aria-expanded="false" aria-label="${esc(p.name)}, hotovo, otevřít">
+        <span class="pic">${pic(p.k)}<span class="badge">${CHECK}</span></span>
+        <span class="fold-t"><span class="nm">${esc(p.name)}</span><span class="sub">${setsTxt(ok, e.band)}</span></span>
+        ${e.feel ? `<span class="fc ${e.feel}">${face(e.feel)}</span>` : ""}
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+    </section>`;
+  }
+  const showBand = p.band || (e.band && e.band !== "none") || bandOpen[p.k];
   const load = `<div class="load-row">
       <div class="step"><button type="button" data-act="kg" data-k="${p.k}" data-d="-1" aria-label="Ubrat ${fmt(p.inc)} kg všem sériím">−</button><span class="val">${e.kg == null ? (p.needKg ? "Nastav kg" : "Vlastní váha") : fmt(e.kg) + " kg"}</span><button type="button" data-act="kg" data-k="${p.k}" data-d="1" aria-label="Přidat ${fmt(p.inc)} kg všem sériím">+</button></div>
-      ${p.bar && e.kg != null ? platesHtml(e.kg) : `<span class="hint">${p.perHand ? "na jednu ruku" : live ? "Nastaví všechny neodcvičené série" : ""}</span>`}
+      ${p.bar && e.kg != null ? platesHtml(e.kg) : `<span class="hint">${p.perHand ? "na jednu ruku" : "pro všechny série"}</span>`}
     </div>
-    <div class="band-row"><span class="q">Guma</span><div class="bands" role="group" aria-label="Guma">${BAND_UI.map(b => `<button type="button" data-act="band" data-k="${p.k}" data-b="${b}" aria-pressed="${(e.band || "none") === b}">${bandName(b)}</button>`).join("")}</div></div>`;
+    ${showBand ? `<div class="band-row"><span class="q">Guma</span><div class="bands" role="group" aria-label="Guma">${BAND_UI.map(b => `<button type="button" data-act="band" data-k="${p.k}" data-b="${b}" aria-pressed="${(e.band || "none") === b}">${bandName(b)}</button>`).join("")}</div></div>` : ""}`;
   const nextI = e.sets.findIndex(x => !x.done);
-  const sets = e.sets.map((x, i) => {
+  const rows = e.sets.map((x, i) => {
     const kg = kgOf(e, x);
-    if (!live) return `<div class="set"><div class="tile static"><span class="n">Série ${i + 1}</span><span class="r">${x.reps}</span><span class="w">${kgTxt(kg)}</span></div></div>`;
-    const cls = x.done ? " is-done" : (isNow && i === nextI ? " next" : "");
+    const cls = x.done ? " done" : (i === nextI ? " next" : "");
     const pop = popAt === p.k + i ? " pop" : "";
     const odd = kg !== (e.kg ?? null) ? " odd" : "";
-    return `<div class="set">
-      <button type="button" class="tile${cls}${pop}" data-act="done" data-k="${p.k}" data-i="${i}" aria-pressed="${x.done}" aria-label="Série ${i + 1}, ${x.reps} ${p.unit === "s" ? "sekund" : "opakování"}, ${kgTxt(kg)}, ${x.done ? "odcvičeno" : "neodcvičeno"}">
-        <span class="n">Série ${i + 1}</span><span class="r">${x.reps}</span><span class="w${odd}">${kgTxt(kg)}</span>
-        <span class="cta">${x.done ? CHECK + "Hotovo" : "Klepni po sérii"}</span>
-      </button>
-      <div class="mini"><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: méně opakování">−</button><span>${p.unit === "s" ? "s" : "opak."}</span><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: více opakování">+</button></div>
-      <div class="mini"><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: ubrat ${fmt(p.inc)} kg">−</button><span>kg</span><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: přidat ${fmt(p.inc)} kg">+</button></div>
+    return `<div class="srow${cls}${pop}">
+      <span class="sn">${i + 1}</span>
+      <div class="nstep"><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: méně ${p.unit === "s" ? "sekund" : "opakování"}">−</button><b>${x.reps}</b><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: více ${p.unit === "s" ? "sekund" : "opakování"}">+</button></div>
+      <div class="nstep${odd}"><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: ubrat ${fmt(p.inc)} kg">−</button><b>${kg == null ? "–" : fmt(kg)}</b><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: přidat ${fmt(p.inc)} kg">+</button></div>
+      <button type="button" class="chk" data-act="done" data-k="${p.k}" data-i="${i}" aria-pressed="${x.done}" aria-label="Série ${i + 1}, ${x.reps} ${p.unit === "s" ? "sekund" : "opakování"}, ${kgTxt(kg)}: ${x.done ? "odcvičeno, klepni pro zrušení" : "označit jako odcvičenou"}">${CHECK}</button>
     </div>`;
   }).join("");
   const tag = !live ? "" : complete ? `<span class="tag done">Hotovo</span>` : isNow ? `<span class="tag now">Teď</span>` : `<span class="tag left">${doneN}/${e.sets.length}</span>`;
@@ -361,17 +372,20 @@ function exHtml(p, e, hint, live, isNow) {
     <div class="ex-head">
       <div class="pic">${pic(p.k)}${complete ? `<span class="badge">${CHECK}</span>` : ""}</div>
       <div><h2>${esc(p.name)}</h2><div class="sub">${tgt}</div></div>
-      ${tag}
+      ${complete ? `<button type="button" class="tag done" data-act="expand" data-k="${p.k}" aria-expanded="true">Sbalit</button>` : tag}
     </div>
     ${p.note ? `<p class="hint setup">${esc(p.note)}</p>` : ""}
     ${hint ? `<p class="hint${hint.up ? " up" : ""}">${hint.note}</p>` : ""}
+    ${hint && hint.prevNote ? `<p class="hint prevnote"><b>Minule sis poznamenal:</b> ${esc(hint.prevNote)}</p>` : ""}
     <div class="load">${load}</div>
     ${p.bar && warmup(e.kg) ? `<p class="hint warm">Rozcvička: ${warmup(e.kg)}</p>` : ""}
-    <div class="sets">${sets}</div>
-    ${live ? `<div class="set-tools"><button type="button" class="linkbtn" data-act="addset" data-k="${p.k}">+ série</button>${e.sets.length > 1 && !e.sets[e.sets.length - 1].done ? `<button type="button" class="linkbtn" data-act="delset" data-k="${p.k}">− série</button>` : ""}${p.custom && !e.sets.some(x => x.done) ? `<button type="button" class="linkbtn danger" data-act="delex" data-k="${p.k}">Odebrat cvik</button>` : ""}</div>` : ""}
-    ${hint && hint.prevNote ? `<p class="hint prevnote"><b>Minule sis poznamenal:</b> ${esc(hint.prevNote)}</p>` : ""}
+    <div class="srows">
+      <div class="shead" aria-hidden="true"><span>Série</span><span>${p.unit === "s" ? "Sekundy" : "Opakování"}</span><span>${p.perHand ? "Kg / ruka" : "Kg"}</span><span></span></div>
+      ${rows}
+    </div>
+    ${live ? `<div class="set-tools"><button type="button" class="linkbtn" data-act="addset" data-k="${p.k}">+ série</button>${e.sets.length > 1 && !e.sets[e.sets.length - 1].done ? `<button type="button" class="linkbtn" data-act="delset" data-k="${p.k}">− série</button>` : ""}${showBand ? "" : `<button type="button" class="linkbtn" data-act="bandopen" data-k="${p.k}">+ guma</button>`}${p.custom && !e.sets.some(x => x.done) ? `<button type="button" class="linkbtn danger" data-act="delex" data-k="${p.k}">Odebrat cvik</button>` : ""}</div>` : ""}
     ${feel}
-    ${live ? `<label class="note" for="note-${p.k}"><span class="q">Poznámka</span><textarea id="note-${p.k}" data-note="${p.k}" rows="2" maxlength="500" placeholder="Např. nastavení stroje, jak se to cítilo, co příště změnit">${esc(e.note || "")}</textarea></label>` : ""}
+    ${live ? `<label class="note" for="note-${p.k}"><span class="q">Poznámka</span><textarea id="note-${p.k}" data-note="${p.k}" rows="1" maxlength="500" placeholder="Nastavení stroje, jak to šlo, co příště">${esc(e.note || "")}</textarea></label>` : ""}
   </section>`;
 }
 function renderToday() {
@@ -1006,6 +1020,8 @@ function editAct(b, act, s) {
   const live = !!sessions[s.id];
   const save = () => { if (live) store.save(s); };
   const p = planOf(s).find(x => x.k === b.dataset.k), ex = s.ex[p.k];
+  if (act === "expand") { openEx[p.k] = !openEx[p.k]; render(); const c = $("#ex-" + p.k); c && c.scrollIntoView({ block: "nearest", behavior: smooth() }); return; }
+  if (act === "bandopen") { bandOpen[p.k] = true; render(); return; }
   if (act === "addset") { const l = ex.sets[ex.sets.length - 1]; ex.sets.push({ reps: l ? l.reps : (p.min || 10), kg: l ? kgOf(ex, l) : ex.kg ?? null, done: false }); }
   if (act === "delset") { if (ex.sets.length > 1 && !ex.sets[ex.sets.length - 1].done) ex.sets.pop(); }
   if (act === "delex") { s.extra = (s.extra || []).filter(d => d.k !== p.k); delete s.ex[p.k]; if (s.hints) delete s.hints[p.k]; save(); render(); return; }

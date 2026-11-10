@@ -2,15 +2,15 @@
   <header class="top">
     <div class="brand"><h1>Trénink <span class="plan">A</span></h1><span class="store" id="store">Načítám…</span></div>
     <div class="progress" id="progress" hidden><div class="track"><div class="fill" id="progress-fill" style="width:0"></div></div><span class="num" id="progress-num">0/21</span></div>
-    <div class="tabs" role="tablist">
-      <button id="tab-today" role="tab" aria-selected="true" data-view="today">Dnes</button>
-      <button id="tab-hist" role="tab" aria-selected="false" data-view="hist">Historie</button>
-      <button id="tab-body" role="tab" aria-selected="false" data-view="body">Postava</button>
-      <button id="tab-ov" role="tab" aria-selected="false" data-view="ov">Přehled</button>
-    </div>
   </header>
   <main id="app"></main>
 </div>
+<nav class="tabs" role="tablist" aria-label="Sekce">
+  <button id="tab-today" role="tab" aria-selected="true" data-view="today"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></span>Dnes</button>
+  <button id="tab-hist" role="tab" aria-selected="false" data-view="hist"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>Historie</button>
+  <button id="tab-body" role="tab" aria-selected="false" data-view="body"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="5" r="2.5"/><path d="M5 9.5h14M12 9.5v5M12 14.5l-3.5 6M12 14.5l3.5 6"/></svg></span>Postava</button>
+  <button id="tab-ov" role="tab" aria-selected="false" data-view="ov"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20v-7M10 20V5M15 20v-9M20 20V9"/></svg></span>Přehled</button>
+</nav>
 <div class="timer" id="timer" hidden>
   <div class="in">
     <div class="t" id="timer-t">0:00</div>

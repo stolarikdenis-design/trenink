@@ -60,7 +60,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 svg { display: block; }
-.wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 150px; }
+.wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 210px; }
 
 /* header */
 header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 14px 12px; display: flex; flex-direction: column; gap: 10px; }
@@ -72,9 +72,6 @@ h1 .plan { background: var(--accent); color: var(--accent-ink); border-radius: 6
 .progress .track { flex: 1; height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
 .progress .fill { height: 100%; background: var(--good); border-radius: 99px; transition: width .3s; }
 .progress .num { font: 700 18px var(--display); font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; }
-.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; }
-.tabs button { border: 0; background: transparent; border-radius: 9px; padding: 8px 2px; font: 700 15px var(--display); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
 
 main { display: flex; flex-direction: column; gap: 14px; padding-top: 4px; }
 .intro { display: flex; flex-direction: column; gap: 12px; background: var(--surface); border-radius: 16px; padding: 16px; border: 1px solid var(--line); }
@@ -271,20 +268,67 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
 .note textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
 .hint.prevnote { background: var(--warn-soft); border-radius: 10px; padding: 8px 10px; color: var(--ink); font-size: 13.5px; }
 .rownote { margin: -2px 0 2px 34px; font-size: 13px; color: var(--muted); font-style: italic; }
+
+/* ---- v2 look: bottom tab bar, set rows, folded finished exercises ---- */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface); border-top: 1px solid var(--line); padding-top: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); box-shadow: 0 -6px 24px rgba(0, 0, 0, .06); }
+.tabs button { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0 4px; font: 600 11.5px var(--body); color: var(--muted); }
+.tabs .ic { display: grid; place-items: center; width: 56px; height: 30px; border-radius: 99px; }
+.tabs svg { width: 24px; height: 24px; }
+.tabs button[aria-selected="true"] { color: var(--ink); font-weight: 700; }
+.tabs button[aria-selected="true"] .ic { background: var(--accent); color: var(--accent-ink); }
+header.top { padding-block: 16px 12px; }
+.timer { left: 10px; right: 10px; bottom: calc(74px + env(safe-area-inset-bottom, 0px)); border-radius: 18px; padding-block: 10px; padding-left: 16px; padding-right: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, .28); }
+.toast { bottom: calc(160px + env(safe-area-inset-bottom, 0px)); }
+.ex { border-width: 1px; box-shadow: 0 1px 2px rgba(0, 0, 0, .05); }
+.ex.now { border-width: 2px; }
+.srows { display: flex; flex-direction: column; gap: 6px; --cols: 28px minmax(0, 1fr) minmax(0, 1fr) 50px; }
+.shead { display: grid; grid-template-columns: var(--cols); gap: 8px; padding: 0 6px; font: 700 11px var(--display); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.shead span:first-child { text-align: center; }
+.srow { display: grid; grid-template-columns: var(--cols); gap: 8px; align-items: center; padding: 6px; border-radius: 14px; background: var(--sunken); border: 2px solid transparent; }
+.srow .sn { font: 800 21px var(--display); text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+.nstep { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: center; height: 44px; background: var(--surface); border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+.nstep button { border: 0; background: transparent; height: 100%; font-size: 21px; font-weight: 700; color: var(--muted); }
+.nstep button:active { background: var(--sunken); }
+.nstep b { text-align: center; font: 800 23px/1 var(--display); font-variant-numeric: tabular-nums; min-width: 0; }
+.nstep.odd b { color: var(--accent); }
+.chk { width: 50px; height: 44px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--line); display: grid; place-items: center; }
+.chk svg { width: 26px; height: 26px; }
+.srow.next { background: var(--surface); border-color: var(--accent); }
+.srow.next .sn { color: var(--accent); }
+.srow.next .chk { border-color: var(--accent); color: var(--accent); }
+.srow.done { background: var(--good-soft); }
+.srow.done .sn { color: var(--good); }
+.srow.done .nstep { background: transparent; border-color: transparent; }
+.srow.done .chk { background: var(--good); border-color: var(--good); color: var(--good-ink); }
+.ex.folded { padding: 0; overflow: hidden; }
+.fold { width: 100%; border: 0; background: var(--good-soft); display: grid; grid-template-columns: 52px minmax(0, 1fr) auto 18px; gap: 12px; align-items: center; padding: 10px 14px 10px 10px; text-align: left; }
+.fold .pic { width: 52px; height: 52px; border-radius: 12px; background: var(--good); color: var(--good-ink); }
+.fold .pic > svg { width: 42px; height: 42px; }
+.fold .pic { position: relative; display: grid; place-items: center; }
+.fold-t { display: flex; flex-direction: column; min-width: 0; }
+.fold .nm { font: 800 21px/1.05 var(--display); text-transform: uppercase; letter-spacing: .02em; }
+.fold .sub { font-size: 13.5px; color: var(--muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fold .fc svg { width: 26px; height: 26px; }
+.fold .chev { font-size: 26px; color: var(--muted); line-height: 1; }
+button.tag { border: 0; cursor: pointer; }
+.ex.complete { background: var(--surface); }
+.load-row .hint { font-size: 13px; }
+.note textarea { min-height: 42px; }
+@media (prefers-reduced-motion: no-preference) { .srow { transition: background .15s, border-color .15s; } .srow.pop { animation: pop .28s ease-out; } }
 </style></head><body>
 <div class="wrap">
   <header class="top">
     <div class="brand"><h1>Trénink <span class="plan">A</span></h1><span class="store" id="store">Načítám…</span></div>
     <div class="progress" id="progress" hidden><div class="track"><div class="fill" id="progress-fill" style="width:0"></div></div><span class="num" id="progress-num">0/21</span></div>
-    <div class="tabs" role="tablist">
-      <button id="tab-today" role="tab" aria-selected="true" data-view="today">Dnes</button>
-      <button id="tab-hist" role="tab" aria-selected="false" data-view="hist">Historie</button>
-      <button id="tab-body" role="tab" aria-selected="false" data-view="body">Postava</button>
-      <button id="tab-ov" role="tab" aria-selected="false" data-view="ov">Přehled</button>
-    </div>
   </header>
   <main id="app"></main>
 </div>
+<nav class="tabs" role="tablist" aria-label="Sekce">
+  <button id="tab-today" role="tab" aria-selected="true" data-view="today"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></span>Dnes</button>
+  <button id="tab-hist" role="tab" aria-selected="false" data-view="hist"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>Historie</button>
+  <button id="tab-body" role="tab" aria-selected="false" data-view="body"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="5" r="2.5"/><path d="M5 9.5h14M12 9.5v5M12 14.5l-3.5 6M12 14.5l3.5 6"/></svg></span>Postava</button>
+  <button id="tab-ov" role="tab" aria-selected="false" data-view="ov"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20v-7M10 20V5M15 20v-9M20 20V9"/></svg></span>Přehled</button>
+</nav>
 <div class="timer" id="timer" hidden>
   <div class="in">
     <div class="t" id="timer-t">0:00</div>
@@ -296,7 +340,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
 <div class="toast" id="toast" hidden></div>
 
 <script>/* any uncaught error is shown on screen, so a screenshot tells what broke */
-const APP_VERSION = "mwakxjx2";
+const APP_VERSION = "mwaso2to";
 function showError(msg) {
   try {
     let el = document.getElementById("errbar");
@@ -624,31 +668,42 @@ function platesHtml(kg) {
   const ps = r.out.map(p => `<i style="height:${PH[p]}px;background:var(${PCOL[p]})" title="${fmt(p)} kg"></i>`).join("");
   return `<div class="plates" aria-label="Na každou stranu: ${r.out.map(fmt).join(" + ") || "nic"} kg"><span class="bar"></span>${ps}<small>${r.out.length ? r.out.map(fmt).join(" + ") + " kg / strana" : "jen osa 20 kg"}${r.rest ? ` (chybí ${fmt(r.rest)} kg)` : ""}</small></div>`;
 }
+/* finished exercises fold into one line; tap to open again */
+const openEx = {}, bandOpen = {};
 function exHtml(p, e, hint, live, isNow) {
   const doneN = e.sets.filter(x => x.done).length;
   const complete = live && doneN === e.sets.length;
   const unit = p.unit === "s" ? "s" : "opakování";
   const tgt = p.open ? `${e.sets.length} série, co nejvíc` : `${e.sets.length} × ${p.min === p.max ? p.min : p.min + "–" + p.max} ${unit}`;
   const kgTxt = v => v == null ? (p.needKg ? "nastav kg" : "vl. váha") : fmt(v) + (p.perHand ? " kg/ruka" : " kg");
+  if (complete && !openEx[p.k]) {
+    const ok = e.sets.map(x => ({ reps: x.reps, kg: kgOf(e, x) }));
+    return `<section class="ex complete folded" id="ex-${p.k}">
+      <button type="button" class="fold" data-act="expand" data-k="${p.k}" aria-expanded="false" aria-label="${esc(p.name)}, hotovo, otevřít">
+        <span class="pic">${pic(p.k)}<span class="badge">${CHECK}</span></span>
+        <span class="fold-t"><span class="nm">${esc(p.name)}</span><span class="sub">${setsTxt(ok, e.band)}</span></span>
+        ${e.feel ? `<span class="fc ${e.feel}">${face(e.feel)}</span>` : ""}
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+    </section>`;
+  }
+  const showBand = p.band || (e.band && e.band !== "none") || bandOpen[p.k];
   const load = `<div class="load-row">
       <div class="step"><button type="button" data-act="kg" data-k="${p.k}" data-d="-1" aria-label="Ubrat ${fmt(p.inc)} kg všem sériím">−</button><span class="val">${e.kg == null ? (p.needKg ? "Nastav kg" : "Vlastní váha") : fmt(e.kg) + " kg"}</span><button type="button" data-act="kg" data-k="${p.k}" data-d="1" aria-label="Přidat ${fmt(p.inc)} kg všem sériím">+</button></div>
-      ${p.bar && e.kg != null ? platesHtml(e.kg) : `<span class="hint">${p.perHand ? "na jednu ruku" : live ? "Nastaví všechny neodcvičené série" : ""}</span>`}
+      ${p.bar && e.kg != null ? platesHtml(e.kg) : `<span class="hint">${p.perHand ? "na jednu ruku" : "pro všechny série"}</span>`}
     </div>
-    <div class="band-row"><span class="q">Guma</span><div class="bands" role="group" aria-label="Guma">${BAND_UI.map(b => `<button type="button" data-act="band" data-k="${p.k}" data-b="${b}" aria-pressed="${(e.band || "none") === b}">${bandName(b)}</button>`).join("")}</div></div>`;
+    ${showBand ? `<div class="band-row"><span class="q">Guma</span><div class="bands" role="group" aria-label="Guma">${BAND_UI.map(b => `<button type="button" data-act="band" data-k="${p.k}" data-b="${b}" aria-pressed="${(e.band || "none") === b}">${bandName(b)}</button>`).join("")}</div></div>` : ""}`;
   const nextI = e.sets.findIndex(x => !x.done);
-  const sets = e.sets.map((x, i) => {
+  const rows = e.sets.map((x, i) => {
     const kg = kgOf(e, x);
-    if (!live) return `<div class="set"><div class="tile static"><span class="n">Série ${i + 1}</span><span class="r">${x.reps}</span><span class="w">${kgTxt(kg)}</span></div></div>`;
-    const cls = x.done ? " is-done" : (isNow && i === nextI ? " next" : "");
+    const cls = x.done ? " done" : (i === nextI ? " next" : "");
     const pop = popAt === p.k + i ? " pop" : "";
     const odd = kg !== (e.kg ?? null) ? " odd" : "";
-    return `<div class="set">
-      <button type="button" class="tile${cls}${pop}" data-act="done" data-k="${p.k}" data-i="${i}" aria-pressed="${x.done}" aria-label="Série ${i + 1}, ${x.reps} ${p.unit === "s" ? "sekund" : "opakování"}, ${kgTxt(kg)}, ${x.done ? "odcvičeno" : "neodcvičeno"}">
-        <span class="n">Série ${i + 1}</span><span class="r">${x.reps}</span><span class="w${odd}">${kgTxt(kg)}</span>
-        <span class="cta">${x.done ? CHECK + "Hotovo" : "Klepni po sérii"}</span>
-      </button>
-      <div class="mini"><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: méně opakování">−</button><span>${p.unit === "s" ? "s" : "opak."}</span><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: více opakování">+</button></div>
-      <div class="mini"><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: ubrat ${fmt(p.inc)} kg">−</button><span>kg</span><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: přidat ${fmt(p.inc)} kg">+</button></div>
+    return `<div class="srow${cls}${pop}">
+      <span class="sn">${i + 1}</span>
+      <div class="nstep"><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: méně ${p.unit === "s" ? "sekund" : "opakování"}">−</button><b>${x.reps}</b><button type="button" data-act="rep" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: více ${p.unit === "s" ? "sekund" : "opakování"}">+</button></div>
+      <div class="nstep${odd}"><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="-1" aria-label="Série ${i + 1}: ubrat ${fmt(p.inc)} kg">−</button><b>${kg == null ? "–" : fmt(kg)}</b><button type="button" data-act="skg" data-k="${p.k}" data-i="${i}" data-d="1" aria-label="Série ${i + 1}: přidat ${fmt(p.inc)} kg">+</button></div>
+      <button type="button" class="chk" data-act="done" data-k="${p.k}" data-i="${i}" aria-pressed="${x.done}" aria-label="Série ${i + 1}, ${x.reps} ${p.unit === "s" ? "sekund" : "opakování"}, ${kgTxt(kg)}: ${x.done ? "odcvičeno, klepni pro zrušení" : "označit jako odcvičenou"}">${CHECK}</button>
     </div>`;
   }).join("");
   const tag = !live ? "" : complete ? `<span class="tag done">Hotovo</span>` : isNow ? `<span class="tag now">Teď</span>` : `<span class="tag left">${doneN}/${e.sets.length}</span>`;
@@ -658,17 +713,20 @@ function exHtml(p, e, hint, live, isNow) {
     <div class="ex-head">
       <div class="pic">${pic(p.k)}${complete ? `<span class="badge">${CHECK}</span>` : ""}</div>
       <div><h2>${esc(p.name)}</h2><div class="sub">${tgt}</div></div>
-      ${tag}
+      ${complete ? `<button type="button" class="tag done" data-act="expand" data-k="${p.k}" aria-expanded="true">Sbalit</button>` : tag}
     </div>
     ${p.note ? `<p class="hint setup">${esc(p.note)}</p>` : ""}
     ${hint ? `<p class="hint${hint.up ? " up" : ""}">${hint.note}</p>` : ""}
+    ${hint && hint.prevNote ? `<p class="hint prevnote"><b>Minule sis poznamenal:</b> ${esc(hint.prevNote)}</p>` : ""}
     <div class="load">${load}</div>
     ${p.bar && warmup(e.kg) ? `<p class="hint warm">Rozcvička: ${warmup(e.kg)}</p>` : ""}
-    <div class="sets">${sets}</div>
-    ${live ? `<div class="set-tools"><button type="button" class="linkbtn" data-act="addset" data-k="${p.k}">+ série</button>${e.sets.length > 1 && !e.sets[e.sets.length - 1].done ? `<button type="button" class="linkbtn" data-act="delset" data-k="${p.k}">− série</button>` : ""}${p.custom && !e.sets.some(x => x.done) ? `<button type="button" class="linkbtn danger" data-act="delex" data-k="${p.k}">Odebrat cvik</button>` : ""}</div>` : ""}
-    ${hint && hint.prevNote ? `<p class="hint prevnote"><b>Minule sis poznamenal:</b> ${esc(hint.prevNote)}</p>` : ""}
+    <div class="srows">
+      <div class="shead" aria-hidden="true"><span>Série</span><span>${p.unit === "s" ? "Sekundy" : "Opakování"}</span><span>${p.perHand ? "Kg / ruka" : "Kg"}</span><span></span></div>
+      ${rows}
+    </div>
+    ${live ? `<div class="set-tools"><button type="button" class="linkbtn" data-act="addset" data-k="${p.k}">+ série</button>${e.sets.length > 1 && !e.sets[e.sets.length - 1].done ? `<button type="button" class="linkbtn" data-act="delset" data-k="${p.k}">− série</button>` : ""}${showBand ? "" : `<button type="button" class="linkbtn" data-act="bandopen" data-k="${p.k}">+ guma</button>`}${p.custom && !e.sets.some(x => x.done) ? `<button type="button" class="linkbtn danger" data-act="delex" data-k="${p.k}">Odebrat cvik</button>` : ""}</div>` : ""}
     ${feel}
-    ${live ? `<label class="note" for="note-${p.k}"><span class="q">Poznámka</span><textarea id="note-${p.k}" data-note="${p.k}" rows="2" maxlength="500" placeholder="Např. nastavení stroje, jak se to cítilo, co příště změnit">${esc(e.note || "")}</textarea></label>` : ""}
+    ${live ? `<label class="note" for="note-${p.k}"><span class="q">Poznámka</span><textarea id="note-${p.k}" data-note="${p.k}" rows="1" maxlength="500" placeholder="Nastavení stroje, jak to šlo, co příště">${esc(e.note || "")}</textarea></label>` : ""}
   </section>`;
 }
 function renderToday() {
@@ -1303,6 +1361,8 @@ function editAct(b, act, s) {
   const live = !!sessions[s.id];
   const save = () => { if (live) store.save(s); };
   const p = planOf(s).find(x => x.k === b.dataset.k), ex = s.ex[p.k];
+  if (act === "expand") { openEx[p.k] = !openEx[p.k]; render(); const c = $("#ex-" + p.k); c && c.scrollIntoView({ block: "nearest", behavior: smooth() }); return; }
+  if (act === "bandopen") { bandOpen[p.k] = true; render(); return; }
   if (act === "addset") { const l = ex.sets[ex.sets.length - 1]; ex.sets.push({ reps: l ? l.reps : (p.min || 10), kg: l ? kgOf(ex, l) : ex.kg ?? null, done: false }); }
   if (act === "delset") { if (ex.sets.length > 1 && !ex.sets[ex.sets.length - 1].done) ex.sets.pop(); }
   if (act === "delex") { s.extra = (s.extra || []).filter(d => d.k !== p.k); delete s.ex[p.k]; if (s.hints) delete s.hints[p.k]; save(); render(); return; }
