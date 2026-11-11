@@ -100,6 +100,7 @@ function getDraft() {
   return draftSess;
 }
 function beginSession(d) {
+  openK = openK === "__none" ? null : openK;
   const now = new Date();
   d.id = "s" + now.getTime(); d.startedAt = now.toISOString();
   sessions[d.id] = d; draftSess = null; pickPlan = null; store.save(d);
@@ -327,21 +328,31 @@ function platesHtml(kg) {
   const ps = r.out.map(p => `<i style="height:${PH[p]}px;background:var(${PCOL[p]})" title="${fmt(p)} kg"></i>`).join("");
   return `<div class="plates" aria-label="Na každou stranu: ${r.out.map(fmt).join(" + ") || "nic"} kg"><span class="bar"></span>${ps}<small>${r.out.length ? r.out.map(fmt).join(" + ") + " kg / strana" : "jen osa 20 kg"}${r.rest ? ` (chybí ${fmt(r.rest)} kg)` : ""}</small></div>`;
 }
-/* finished exercises fold into one line; tap to open again */
-const openEx = {}, bandOpen = {};
-function exHtml(p, e, hint, live, isNow) {
+/* one exercise is open at a time (the current one unless he picked another); the rest are one-line rows */
+let openK = null, shownOpen = null;
+const bandOpen = {};
+function openKeyOf(defs, ex) {
+  if (openK === "__none") return null;
+  if (openK && defs.some(p => p.k === openK)) return openK;
+  const cur = defs.find(p => ex[p.k] && ex[p.k].sets.some(x => !x.done));
+  return cur ? cur.k : null;
+}
+function exHtml(p, e, hint, live, isNow, isOpen = true) {
   const doneN = e.sets.filter(x => x.done).length;
   const complete = live && doneN === e.sets.length;
   const unit = p.unit === "s" ? "s" : "opakování";
   const tgt = p.open ? `${e.sets.length} série, co nejvíc` : `${e.sets.length} × ${p.min === p.max ? p.min : p.min + "–" + p.max} ${unit}`;
   const kgTxt = v => v == null ? (p.needKg ? "nastav kg" : "vl. váha") : fmt(v) + (p.perHand ? " kg/ruka" : " kg");
-  if (complete && !openEx[p.k]) {
+  if (!isOpen) {
     const ok = e.sets.map(x => ({ reps: x.reps, kg: kgOf(e, x) }));
-    return `<section class="ex complete folded" id="ex-${p.k}">
-      <button type="button" class="fold" data-act="expand" data-k="${p.k}" aria-expanded="false" aria-label="${esc(p.name)}, hotovo, otevřít">
-        <span class="pic">${pic(p.k)}<span class="badge">${CHECK}</span></span>
-        <span class="fold-t"><span class="nm">${esc(p.name)}</span><span class="sub">${setsTxt(ok, e.band)}</span></span>
-        ${e.feel ? `<span class="fc ${e.feel}">${face(e.feel)}</span>` : ""}
+    const main = e.kg == null ? (p.needKg ? "nastav kg" : e.band && e.band !== "none" ? "guma " + bandName(e.band) : "vlastní váha") : fmt(e.kg) + (p.perHand ? " kg/ruka" : " kg");
+    const sub = complete ? setsTxt(ok, e.band) : `${main} · ${tgt}`;
+    const state = complete ? "done" : isNow ? "now" : doneN ? "part" : "todo";
+    return `<section class="ex row-ex ${state}" id="ex-${p.k}">
+      <button type="button" class="fold" data-act="open" data-k="${p.k}" aria-expanded="false" aria-label="${esc(p.name)}, ${complete ? "hotovo" : doneN + " z " + e.sets.length + " sérií"}, otevřít">
+        <span class="pic">${pic(p.k)}${complete ? `<span class="badge">${CHECK}</span>` : ""}</span>
+        <span class="fold-t"><span class="nm">${esc(p.name)}</span><span class="sub">${sub}</span></span>
+        ${complete ? (e.feel ? `<span class="fc ${e.feel}">${face(e.feel)}</span>` : "<span></span>") : `<span class="cnt${isNow ? " now" : ""}">${isNow ? "Teď · " : ""}${doneN}/${e.sets.length}</span>`}
         <span class="chev" aria-hidden="true">›</span>
       </button>
     </section>`;
@@ -372,7 +383,7 @@ function exHtml(p, e, hint, live, isNow) {
     <div class="ex-head">
       <div class="pic">${pic(p.k)}${complete ? `<span class="badge">${CHECK}</span>` : ""}</div>
       <div><h2>${esc(p.name)}</h2><div class="sub">${tgt}</div></div>
-      ${complete ? `<button type="button" class="tag done" data-act="expand" data-k="${p.k}" aria-expanded="true">Sbalit</button>` : tag}
+      <span class="headr">${tag}<button type="button" class="close" data-act="open" data-k="${p.k}" aria-expanded="true" aria-label="Zavřít ${esc(p.name)}">⌃</button></span>
     </div>
     ${p.note ? `<p class="hint setup">${esc(p.note)}</p>` : ""}
     ${hint ? `<p class="hint${hint.up ? " up" : ""}">${hint.note}</p>` : ""}
@@ -402,11 +413,12 @@ function renderToday2(s) {
       <div class="plans" role="group" aria-label="Plán">${PLAN_IDS.map(id => `<button type="button" data-a="pick" data-p="${id}" aria-pressed="${id === pid}"><b>${id}</b><span>${PLANS[id].title}</span>${id === next ? "<i>na řadě</i>" : id === "C" ? "<i>bonus</i>" : id === "A" ? "<i>mimo pořadí</i>" : ""}</button>`).join("")}</div>
       <p>${n ? `Máš za sebou ${n} ${n === 1 ? "trénink" : n < 5 ? "tréninky" : "tréninků"}. Váhy a opakování navazují na poslední trénink. Upravit je můžeš hned, trénink se spustí tlačítkem nebo první odkliknutou sérií.` : "Váhy a opakování můžeš upravit hned. Po každé sérii klepni na její dlaždici, zezelená a spustí se pauza."}</p>
       <button class="btn" id="start" type="button">Začít trénink ${pid}</button></div>
-      ${planOf(preview).map(p => exHtml(p, preview.ex[p.k], preview.hints[p.k], true, false)).join("")}`;
+      <div class="exlist">${(() => { const defs = planOf(preview), ok = shownOpen = openKeyOf(defs, preview.ex); return defs.map(p => exHtml(p, preview.ex[p.k], preview.hints[p.k], true, false, p.k === ok)).join(""); })()}</div>`;
   }
   const defs = planOf(s);
   const nowK = (defs.find(p => s.ex[p.k].sets.some(x => !x.done)) || {}).k;
-  return `${defs.map(p => exHtml(p, s.ex[p.k], s.hints && s.hints[p.k], true, p.k === nowK)).join("")}
+  const ok = shownOpen = openKeyOf(defs, s.ex);
+  return `<div class="exlist">${defs.map(p => exHtml(p, s.ex[p.k], s.hints && s.hints[p.k], true, p.k === nowK, p.k === ok)).join("")}</div>
     ${addHtml(s)}
     <div class="finish">
       <button class="btn${nowK ? "" : " good"}" id="finish" type="button">Dokončit trénink</button>
@@ -944,7 +956,7 @@ document.getElementById("app").addEventListener("click", e => {
     if (Object.keys(bodyDraft.v).every(k => out[k] === null)) { bodyMsg = "Vyplň aspoň váhu nebo jednu míru."; render(); return; }
     body[out.id] = out; bodyStore.save(out); bodyDraft = null; bodyMsg = ""; toast("Míry uloženy"); render(); return;
   }
-  if (a === "pick") { pickPlan = b.dataset.p; render(); return; }
+  if (a === "pick") { pickPlan = b.dataset.p; openK = null; render(); return; }
   if (a === "ovmode") { ov = { mode: b.dataset.m, offset: 0 }; pdfMsg = ""; render(); return; }
   if (a === "ovnav") { ov.offset = Math.min(0, ov.offset + +b.dataset.d); pdfMsg = ""; render(); return; }
   if (a === "pdf") { savePdf(b.dataset.scope, b); return; }
@@ -1025,7 +1037,7 @@ function editAct(b, act, s) {
   const live = !!sessions[s.id];
   const save = () => { if (live) store.save(s); };
   const p = planOf(s).find(x => x.k === b.dataset.k), ex = s.ex[p.k];
-  if (act === "expand") { openEx[p.k] = !openEx[p.k]; render(); const c = $("#ex-" + p.k); c && c.scrollIntoView({ block: "nearest", behavior: smooth() }); return; }
+  if (act === "open") { openK = shownOpen === p.k ? "__none" : p.k; render(); const c = $("#ex-" + p.k); c && c.scrollIntoView({ block: "start", behavior: smooth() }); return; }
   if (act === "bandopen") { bandOpen[p.k] = true; render(); return; }
   if (act === "addset") { const l = ex.sets[ex.sets.length - 1]; ex.sets.push({ reps: l ? l.reps : (p.min || 10), kg: l ? kgOf(ex, l) : ex.kg ?? null, done: false }); }
   if (act === "delset") { if (ex.sets.length > 1 && !ex.sets[ex.sets.length - 1].done) ex.sets.pop(); }
@@ -1042,12 +1054,12 @@ function editAct(b, act, s) {
   if (act === "done") {
     const i = +b.dataset.i, x = ex.sets[i]; x.done = !x.done;
     if (x.done) { popAt = p.k + i; startTimer(p.rest, `${p.name}, série ${i + 1}`); }
-    if (x.done && ex.sets.every(y => y.done)) nextUp = true;
+    if (x.done && ex.sets.every(y => y.done)) { nextUp = true; openK = null; }
   }
   save(); render();
   if (nextUp) {
     nextUp = false;
-    const nx = document.querySelector(".ex.now");
+    const nx = shownOpen && $("#ex-" + shownOpen);
     if (nx) { setTimeout(() => nx.scrollIntoView({ block: "start", behavior: smooth() }), 350); return; }
   }
   if (act === "done" || act === "feel" || act === "rep" || act === "skg" || act === "kg") {
