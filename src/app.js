@@ -380,7 +380,7 @@ function exHtml(p, e, hint, live, isNow) {
     <div class="load">${load}</div>
     ${p.bar && warmup(e.kg) ? `<p class="hint warm">Rozcvička: ${warmup(e.kg)}</p>` : ""}
     <div class="srows">
-      <div class="shead" aria-hidden="true"><span>Série</span><span>${p.unit === "s" ? "Sekundy" : "Opakování"}</span><span>${p.perHand ? "Kg / ruka" : "Kg"}</span><span></span></div>
+      <div class="shead" aria-hidden="true"><span>#</span><span>${p.unit === "s" ? "Sekundy" : "Opakování"}</span><span>${p.perHand ? "Kg / ruka" : "Kg"}</span><span></span></div>
       ${rows}
     </div>
     ${live ? `<div class="set-tools"><button type="button" class="linkbtn" data-act="addset" data-k="${p.k}">+ série</button>${e.sets.length > 1 && !e.sets[e.sets.length - 1].done ? `<button type="button" class="linkbtn" data-act="delset" data-k="${p.k}">− série</button>` : ""}${showBand ? "" : `<button type="button" class="linkbtn" data-act="bandopen" data-k="${p.k}">+ guma</button>`}${p.custom && !e.sets.some(x => x.done) ? `<button type="button" class="linkbtn danger" data-act="delex" data-k="${p.k}">Odebrat cvik</button>` : ""}</div>` : ""}
@@ -453,7 +453,7 @@ function renderHist() {
         if (!v || t > v.t) v = { t, txt: (e.band && e.band !== "none" ? bandName(e.band) + " · " : "") + (p.open ? `${tot} opak.` : ok.map(x => x.reps).join("/")) };
       }
     });
-    if (p.custom && !v) return "";
+    if (!v) return "";
     return `<div class="pr">${pic(p.k)}<div><div class="n">${esc(p.name)}</div><div class="v">${v ? v.txt : "–"}</div></div></div>`;
   }).join("");
   const days = done.map(s => {
@@ -484,7 +484,9 @@ function render2() {
   $("#app").innerHTML = view === "today" ? renderToday() : view === "hist" ? renderHist() : view === "body" ? renderBody() : renderOv();
   if (fid && $("#" + fid)) { const el = $("#" + fid); el.focus({ preventScroll: true }); try { el.setSelectionRange(sel[0], sel[1]); } catch {} }
   popAt = null;
-  const cur = active(); $(".plan").textContent = cur ? planId(cur) : (pickPlan || nextPlan());
+  const cur = active(), pl = cur ? planId(cur) : (pickPlan || nextPlan());
+  $("#title").innerHTML = view === "today" ? `Trénink <span class="plan">${pl}</span>` : { hist: "Historie", body: "Postava", ov: "Přehled" }[view];
+  $("#hdate").textContent = new Date().toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" });
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === view));
   const s = active();
   $("#progress").hidden = !s;
@@ -494,16 +496,18 @@ function render2() {
 }
 function updateProgress(s) {
   const all = planOf(s).flatMap(p => s.ex[p.k].sets), d = all.filter(x => x.done).length;
-  $("#progress-fill").style.width = (100 * d / Math.max(1, all.length)) + "%";
+  const C = 2 * Math.PI * 19, f = d / Math.max(1, all.length);
+  $("#progress-fill").style.strokeDasharray = `${(C * f).toFixed(1)} ${C.toFixed(1)}`;
+  $("#progress-num").textContent = `${d}/${all.length}`;
   const mins = Math.max(0, Math.floor((Date.now() - new Date(s.startedAt)) / 60000));
-  $("#progress-num").textContent = `${d}/${all.length} · ${mins} min`;
+  $("#progress-time").textContent = `${mins} min`;
 }
 setInterval(() => { const s = active(); if (s) updateProgress(s); }, 30000);
 
 /* ---------- rest timer ---------- */
-let tEnd = 0, tInt = null, beeped = false, wake = null;
+let tDur = 1, tEnd = 0, tInt = null, beeped = false, wake = null;
 function startTimer(sec, label) {
-  tEnd = Date.now() + sec * 1000; beeped = false;
+  tEnd = Date.now() + sec * 1000; tDur = sec * 1000; beeped = false;
   $("#timer-what").textContent = "Pauza po: " + label;
   $("#timer").hidden = false;
   clearInterval(tInt); tick(); tInt = setInterval(tick, 250);
@@ -513,6 +517,7 @@ function tick() {
   const el = $("#timer-t");
   el.textContent = (left < 0 ? "+" : "") + Math.floor(a / 60) + ":" + String(a % 60).padStart(2, "0");
   el.classList.toggle("over", left < 0);
+  $("#timer-bar").style.transform = `scaleX(${Math.max(0, Math.min(1, (tEnd - Date.now()) / tDur)).toFixed(3)})`;
   if (left <= 0 && !beeped) { beeped = true; beep(); try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch {} }
 }
 let actx = null;
@@ -523,7 +528,7 @@ function beep() {
 }
 async function keepAwake() { try { if (navigator.wakeLock && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch {} }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && active()) keepAwake(); });
-$("#timer-add").onclick = () => { tEnd += 30000; beeped = false; tick(); };
+$("#timer-add").onclick = () => { tEnd += 30000; tDur += 30000; beeped = false; tick(); };
 $("#timer-skip").onclick = () => { clearInterval(tInt); $("#timer").hidden = true; };
 
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; setTimeout(() => { t.hidden = true; }, 2600); }

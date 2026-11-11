@@ -1,7 +1,12 @@
 <div class="wrap">
   <header class="top">
-    <div class="brand"><h1>Trénink <span class="plan">A</span></h1><span class="store" id="store">Načítám…</span></div>
-    <div class="progress" id="progress" hidden><div class="track"><div class="fill" id="progress-fill" style="width:0"></div></div><span class="num" id="progress-num">0/21</span></div>
+    <div class="brand">
+      <div class="titles"><p class="eyebrow"><span id="hdate"></span><span class="store" id="store">Načítám…</span></p><h1 id="title">Trénink <span class="plan">B</span></h1></div>
+      <div class="ring" id="progress" hidden aria-label="Postup tréninku">
+        <svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rt" cx="22" cy="22" r="19"/><circle class="rf" id="progress-fill" cx="22" cy="22" r="19" stroke-dasharray="0 120"/></svg>
+        <span class="rn"><b id="progress-num">0/0</b><small id="progress-time">0 min</small></span>
+      </div>
+    </div>
   </header>
   <main id="app"></main>
 </div>
@@ -12,6 +17,7 @@
   <button id="tab-ov" role="tab" aria-selected="false" data-view="ov"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20v-7M10 20V5M15 20v-9M20 20V9"/></svg></span>Přehled</button>
 </nav>
 <div class="timer" id="timer" hidden>
+  <div class="tbar"><i id="timer-bar"></i></div>
   <div class="in">
     <div class="t" id="timer-t">0:00</div>
     <div class="what" id="timer-what">Pauza</div>
