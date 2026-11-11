@@ -484,3 +484,56 @@ main { gap: 10px; padding-top: 2px; }
 .faces.mini { flex: none; }
 .faces.mini button { width: 34px; height: 32px; }
 .faces.mini svg { width: 20px; height: 20px; }
+
+/* ---- overview grid + full-screen exercise ---- */
+.exgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.extile { position: relative; border: 1px solid var(--line); background: var(--surface); border-radius: 18px; padding: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; min-height: 132px; box-shadow: var(--shadow); min-width: 0; }
+.extile .tt { display: flex; width: 100%; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+.extile .pic { width: 44px; height: 44px; border-radius: 12px; background: var(--sunken); color: var(--ink); position: relative; display: grid; place-items: center; }
+.extile .pic > svg { width: 36px; height: 36px; }
+.extile .nm { font: 700 17px/1.15 var(--semi); overflow-wrap: anywhere; }
+.extile .meta { font-size: 12.5px; color: var(--muted); line-height: 1.3; }
+.extile .dots { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; padding-top: 6px; }
+.extile .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.extile .dots i.on { background: var(--good); }
+.extile .fc svg { width: 24px; height: 24px; }
+.extile.now { border: 1.5px solid var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
+.extile.now .pic { background: var(--accent); color: var(--accent-ink); }
+.extile.part .dots i:not(.on) { background: var(--warn-soft); }
+.extile.done { background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 35%, var(--line)); box-shadow: none; }
+.extile.done .pic { background: var(--good); color: var(--good-ink); }
+.extile:active { transform: scale(.98); }
+.focus { position: fixed; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-top: env(safe-area-inset-top, 0px); }
+.fbar { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; background: var(--bg); padding-block: 10px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); border-bottom: 1px solid var(--line); }
+.fback { border: 0; background: transparent; font: 600 17px var(--body); color: var(--accent); padding: 6px 4px; }
+.fpos { text-align: center; font: 600 14px var(--body); color: var(--muted); font-variant-numeric: tabular-nums; }
+.fnav { display: flex; gap: 6px; }
+.fnav button { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-size: 22px; font-weight: 700; color: var(--ink); }
+.fnav button:disabled { opacity: .3; }
+.fbody { max-width: 640px; margin: 0 auto; padding-block: 12px 180px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 12px; }
+.focus .ex.open { padding: 16px; gap: 14px; border-radius: 22px; }
+.focus .ex.open .ex-head { grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; }
+.focus .ex.open .pic { width: 56px; height: 56px; border-radius: 15px; }
+.focus .ex.open .pic svg { width: 46px; height: 46px; }
+.focus .ex.open h2 { font-size: 25px; }
+.focus .ex.open .sub { font-size: 14px; }
+.focus .info { font-size: 13.5px; }
+.focus .step button { width: 48px; height: 48px; }
+.focus .step .val { font-size: 25px; min-width: 110px; }
+.focus .srows { gap: 8px; --cols: 26px minmax(0, 1fr) minmax(0, 1fr) 54px; }
+.focus .srow { padding: 6px; border-radius: 14px; }
+.focus .srow .sn { font-size: 21px; }
+.focus .nstep { height: 50px; grid-template-columns: 40px minmax(0, 1fr) 40px; border-radius: 12px; }
+.focus .nstep b { font-size: 25px; }
+.focus .chk { width: 54px; height: 50px; border-radius: 13px; }
+.focus .chk svg { width: 28px; height: 28px; }
+.focus .faces.mini button { width: 42px; height: 38px; }
+.focus .faces.mini svg { width: 24px; height: 24px; }
+.focus .pill { padding: 7px 12px; font-size: 13px; }
+.fnext { width: 100%; }
+html.focus-on, html.focus-on body { overflow: hidden; }
+html.focus-on .timer { z-index: 30; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+html.focus-on .toast { z-index: 31; bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+.focus .exfoot { flex-wrap: wrap; row-gap: 8px; }
+.focus .tools { flex-wrap: wrap; overflow: visible; }
+.focus .faces.mini { margin-left: auto; }

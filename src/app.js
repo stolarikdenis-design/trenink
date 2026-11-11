@@ -337,7 +337,7 @@ function openKeyOf(defs, ex) {
   const cur = defs.find(p => ex[p.k] && ex[p.k].sets.some(x => !x.done));
   return cur ? cur.k : null;
 }
-function exHtml(p, e, hint, live, isNow, isOpen = true) {
+function exHtml(p, e, hint, live, isNow, isOpen = true, inFocus = false) {
   const doneN = e.sets.filter(x => x.done).length;
   const complete = live && doneN === e.sets.length;
   const unit = p.unit === "s" ? "s" : "opakování";
@@ -391,7 +391,7 @@ function exHtml(p, e, hint, live, isNow, isOpen = true) {
     <div class="ex-head">
       <div class="pic">${pic(p.k)}${complete ? `<span class="badge">${CHECK}</span>` : ""}</div>
       <div><h2>${esc(p.name)}</h2><div class="sub">${tgt}</div></div>
-      <span class="headr">${tag}<button type="button" class="close" data-act="open" data-k="${p.k}" aria-expanded="true" aria-label="Zavřít ${esc(p.name)}">⌃</button></span>
+      <span class="headr">${tag}${inFocus ? "" : `<button type="button" class="close" data-act="open" data-k="${p.k}" aria-expanded="true" aria-label="Zavřít ${esc(p.name)}">⌃</button>`}</span>
     </div>
     ${info.length ? `<p class="info">${info.join(" · ")}</p>` : ""}
     ${load}
@@ -410,6 +410,37 @@ function renderToday() {
   const s = active();
   return renderToday2(s);
 }
+/* overview = grid of tiles; tapping one opens that exercise full screen */
+let focusK = null;
+function tileHtml(p, e, isNow) {
+  const doneN = e.sets.filter(x => x.done).length, complete = doneN === e.sets.length;
+  const main = e.kg == null ? (p.needKg ? "nastav kg" : e.band && e.band !== "none" ? "guma " + bandName(e.band) : "vlastní váha") : fmt(e.kg) + (p.perHand ? " kg/ruka" : " kg");
+  const reps = p.open ? "max" : p.min === p.max ? p.min : p.min + "–" + p.max;
+  const state = complete ? "done" : isNow ? "now" : doneN ? "part" : "todo";
+  const dots = e.sets.map(x => `<i class="${x.done ? "on" : ""}"></i>`).join("");
+  return `<button type="button" class="extile ${state}" id="ex-${p.k}" data-act="focus" data-k="${p.k}" aria-label="${esc(p.name)}, ${main}, ${doneN} z ${e.sets.length} sérií${complete ? ", hotovo" : ""}">
+    <span class="tt"><span class="pic">${pic(p.k)}${complete ? `<span class="badge">${CHECK}</span>` : ""}</span>${isNow && !complete ? `<span class="tag now">Teď</span>` : e.feel && complete ? `<span class="fc ${e.feel}">${face(e.feel)}</span>` : ""}</span>
+    <span class="nm">${esc(p.name)}</span>
+    <span class="meta">${main} · ${e.sets.length}×${reps}${p.unit === "s" ? " s" : ""}</span>
+    <span class="dots" aria-hidden="true">${dots}</span>
+  </button>`;
+}
+function focusHtml(s, defs, nowK) {
+  const i = defs.findIndex(p => p.k === focusK); if (i < 0) return "";
+  const p = defs[i], e = s.ex[p.k], prev = defs[i - 1], next = defs[i + 1];
+  const nextTodo = defs.slice(i + 1).concat(defs.slice(0, i)).find(d => s.ex[d.k].sets.some(x => !x.done));
+  return `<div class="focus" role="dialog" aria-modal="true" aria-label="${esc(p.name)}">
+    <div class="fbar">
+      <button type="button" class="fback" data-act="unfocus" data-k="${p.k}">‹ Cviky</button>
+      <span class="fpos">${i + 1} / ${defs.length}</span>
+      <span class="fnav"><button type="button" data-act="focus" data-k="${prev ? prev.k : p.k}" aria-label="Předchozí cvik" ${prev ? "" : "disabled"}>‹</button><button type="button" data-act="focus" data-k="${next ? next.k : p.k}" aria-label="Další cvik" ${next ? "" : "disabled"}>›</button></span>
+    </div>
+    <div class="fbody">
+      ${exHtml(p, e, s.hints && s.hints[p.k], true, p.k === nowK, true, true)}
+      ${nextTodo && nextTodo.k !== p.k ? `<button type="button" class="btn ghost fnext" data-act="focus" data-k="${nextTodo.k}">Další: ${esc(nextTodo.name)} ›</button>` : `<button type="button" class="btn fnext" data-act="unfocus" data-k="${p.k}">Zpět na přehled</button>`}
+    </div>
+  </div>`;
+}
 function renderToday2(s) {
   if (!s) {
     const preview = getDraft(), pid = preview.plan;
@@ -418,12 +449,13 @@ function renderToday2(s) {
     return `<div class="intro">
       <div class="plans" role="group" aria-label="Plán">${PLAN_IDS.map(id => `<button type="button" data-a="pick" data-p="${id}" aria-pressed="${id === pid}"><b>${id}</b><span>${PLANS[id].title}</span>${id === next ? "<i>na řadě</i>" : ""}</button>`).join("")}</div>
       <button class="btn" id="start" type="button">Začít trénink ${pid}</button></div>
-      <div class="exlist">${(() => { const defs = planOf(preview), ok = shownOpen = openKeyOf(defs, preview.ex); return defs.map(p => exHtml(p, preview.ex[p.k], preview.hints[p.k], true, false, p.k === ok)).join(""); })()}</div>`;
+      <div class="exgrid">${planOf(preview).map(p => tileHtml(p, preview.ex[p.k], false)).join("")}</div>
+      ${focusK ? focusHtml(preview, planOf(preview), null) : ""}`;
   }
   const defs = planOf(s);
   const nowK = (defs.find(p => s.ex[p.k].sets.some(x => !x.done)) || {}).k;
-  const ok = shownOpen = openKeyOf(defs, s.ex);
-  return `<div class="exlist">${defs.map(p => exHtml(p, s.ex[p.k], s.hints && s.hints[p.k], true, p.k === nowK, p.k === ok)).join("")}</div>
+  return `<div class="exgrid">${defs.map(p => tileHtml(p, s.ex[p.k], p.k === nowK)).join("")}</div>
+    ${focusK ? focusHtml(s, defs, nowK) : ""}
     ${addHtml(s)}
     <div class="finish">
       <button class="btn${nowK ? "" : " good"}" id="finish" type="button">Dokončit trénink</button>
@@ -498,7 +530,9 @@ function render() {
 function render2() {
   { const cur = active(); if (cur && ensureEx(cur)) store.save(cur); }
   const a = document.activeElement, fid = a && a.id && (a.tagName === "INPUT" || a.tagName === "TEXTAREA") ? a.id : null, sel = fid ? [a.selectionStart, a.selectionEnd] : null;
+  const fOld = document.querySelector(".focus"), fTop = fOld ? fOld.scrollTop : 0;
   $("#app").innerHTML = view === "today" ? renderToday() : view === "hist" ? renderHist() : view === "body" ? renderBody() : renderOv();
+  { const f = document.querySelector(".focus"); if (f && fTop) f.scrollTop = fTop; }
   if (fid && $("#" + fid)) { const el = $("#" + fid); el.focus({ preventScroll: true }); try { el.setSelectionRange(sel[0], sel[1]); } catch {} }
   popAt = null;
   const cur = active(), pl = cur ? planId(cur) : (pickPlan || nextPlan());
@@ -506,6 +540,7 @@ function render2() {
   $("#hdate").textContent = new Date().toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" });
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === view));
   $("#tab-body").classList.toggle("due", !body[isoWeek(new Date())]);
+  document.documentElement.classList.toggle("focus-on", view === "today" && !!$(".focus"));
   const s = active();
   $("#progress").hidden = !s;
   if (s) {
@@ -962,7 +997,7 @@ document.getElementById("app").addEventListener("click", e => {
     if (Object.keys(bodyDraft.v).every(k => out[k] === null)) { bodyMsg = "Vyplň aspoň váhu nebo jednu míru."; render(); return; }
     body[out.id] = out; bodyStore.save(out); bodyDraft = null; bodyMsg = ""; toast("Míry uloženy"); render(); return;
   }
-  if (a === "pick") { pickPlan = b.dataset.p; openK = null; render(); return; }
+  if (a === "pick") { pickPlan = b.dataset.p; openK = null; focusK = null; render(); return; }
   if (a === "ovmode") { ov = { mode: b.dataset.m, offset: 0 }; pdfMsg = ""; render(); return; }
   if (a === "ovnav") { ov.offset = Math.min(0, ov.offset + +b.dataset.d); pdfMsg = ""; render(); return; }
   if (a === "pdf") { savePdf(b.dataset.scope, b); return; }
@@ -976,6 +1011,7 @@ document.getElementById("app").addEventListener("click", e => {
 });
 
 /* ---------- events ---------- */
+window.addEventListener("popstate", () => { if (focusK) { focusK = null; render(); } });
 document.querySelector(".tabs").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; view = b.dataset.view; pendingDelete = null; render();
 });
@@ -986,11 +1022,11 @@ $("#app").addEventListener("input", e => {
 $("#app").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.closest(".addbox")) { e.preventDefault(); $("#add-go") && $("#add-go").click(); } });
 $("#app").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
-  if (b.id === "start") { beginSession(getDraft()); render(); window.scrollTo(0, 0); return; }
+  if (b.id === "start") { beginSession(getDraft()); render(); if (!focusK) window.scrollTo(0, 0); return; }
   if (b.id !== "discard") pendingDiscard = false;
   const s = active();
   if (b.id === "finish" && s) {
-    s.finishedAt = new Date().toISOString(); store.save(s); draftSess = null;
+    s.finishedAt = new Date().toISOString(); store.save(s); draftSess = null; focusK = null;
     clearInterval(tInt); $("#timer").hidden = true; try { wake && wake.release(); } catch {}
     toast("Trénink uložen"); view = "hist"; render(); window.scrollTo(0, 0); return;
   }
@@ -1043,6 +1079,8 @@ function editAct(b, act, s) {
   const live = !!sessions[s.id];
   const save = () => { if (live) store.save(s); };
   const p = planOf(s).find(x => x.k === b.dataset.k), ex = s.ex[p.k];
+  if (act === "focus") { focusK = p.k; render(); const f = $(".focus"); if (f) f.scrollTop = 0; if (!IS_ARTIFACT) { try { if (!history.state || !history.state.focus) history.pushState({ focus: 1 }, ""); } catch {} } return; }
+  if (act === "unfocus") { focusK = null; render(); return; }
   if (act === "open") { openK = shownOpen === p.k ? "__none" : p.k; render(); const c = $("#ex-" + p.k); c && c.scrollIntoView({ block: "start", behavior: smooth() }); return; }
   if (act === "bandopen") { bandOpen[p.k] = true; render(); return; }
   if (act === "noteopen") { noteOpen[p.k] = true; render(); const t = $("#note-" + p.k); t && t.focus(); return; }
@@ -1061,12 +1099,15 @@ function editAct(b, act, s) {
   if (act === "done") {
     const i = +b.dataset.i, x = ex.sets[i]; x.done = !x.done;
     if (x.done) { popAt = p.k + i; startTimer(p.rest, `${p.name}, série ${i + 1}`); }
-    if (x.done && ex.sets.every(y => y.done)) { nextUp = true; openK = null; }
+    if (x.done && ex.sets.every(y => y.done)) {
+      nextUp = true; openK = null;
+      if (focusK) { const defs = planOf(s), i = defs.findIndex(d => d.k === p.k); const nt = defs.slice(i + 1).concat(defs.slice(0, i)).find(d => s.ex[d.k].sets.some(y => !y.done)); setTimeout(() => { focusK = nt ? nt.k : null; render(); const f = $(".focus"); if (f) f.scrollTop = 0; if (nt) toast("Další: " + nt.name); }, 600); }
+    }
   }
   save(); render();
   if (nextUp) {
     nextUp = false;
-    const nx = shownOpen && $("#ex-" + shownOpen);
+    const nx = !focusK && shownOpen && $("#ex-" + shownOpen);
     if (nx) { setTimeout(() => nx.scrollIntoView({ block: "start", behavior: smooth() }), 350); return; }
   }
   if (act === "done" || act === "feel" || act === "rep" || act === "skg" || act === "kg") {
