@@ -39,7 +39,7 @@ const PIC = {
   rdl:   `<circle cx="10" cy="16" r="3.4"/><path d="M14 20l16 5M30 25l-1 9 1 9h-6M17 21l-1 11"/><circle cx="16" cy="36" r="5.5"/>`,
 };
 /* exercises that share a drawing */
-const PIC_ALIAS = { dbpress: "ohp", scapshrug: "scap", apullup: "pullup", smithinc: "incbench", smithrow: "ringrow" };
+const PIC_ALIAS = { whang: "hammer", dbpress: "ohp", scapshrug: "scap", apullup: "pullup", smithinc: "incbench", smithrow: "ringrow" };
 const pic = (k, cls = "") => `<svg viewBox="0 0 48 48" class="${cls}" aria-hidden="true" ${S}>${PIC[k] || PIC[PIC_ALIAS[k]] || PIC.custom}</svg>`;
 const CHECK = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
 const FACES = {
@@ -68,14 +68,15 @@ const PLANS = {
     { k: "rdl",    name: "Romanian deadlift", sets: 3, min: 6, max: 10, kg: 40, inc: 2.5, bar: true, rest: 120, since: "2026-11-10" },
   ] },
   D: { title: "Day 2 · jednoručky, smith, výpady", items: [
-    { k: "dbpress",   name: "Seated dumbbell press", note: "Váha je na jednu ruku.", sets: 3, min: 6, max: 10, kg: 7.5, inc: 2.5, perHand: true, rest: 120 },
+    { k: "dbpress",   name: "Seated dumbbell press", note: "Váha je na jednu ruku.", sets: 3, min: 6, max: 10, kg: 10, inc: 2.5, perHand: true, rest: 120, since: "2026-11-13" },
     { k: "scapshrug", name: "Hanging scapula shrugs", note: "Ve visu jen lopatky nahoru a dolů, paže rovné.", sets: 2, min: 6, max: 10, kg: null, inc: 2.5, noProg: true, rest: 60 },
-    { k: "apullup",   name: "Assisted pull-ups", sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "heavy", assist: true, rest: 120 },
-    { k: "smithinc",  name: "Incline press (Smith)", sets: 3, min: 6, max: 10, kg: 52.5, inc: 2.5, rest: 150 },
+    { k: "whang",     name: "Weighted hang", note: "Vis se závažím na opasku. Čas je v sekundách, uprav podle sebe.", sets: 2, min: 20, max: 40, step: 5, unit: "s", kg: 20, inc: 2.5, rest: 90, since: "2026-11-13" },
+    { k: "apullup",   name: "Assisted pull-ups", sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120, since: "2026-11-13" },
+    { k: "smithinc",  name: "Incline press (Smith)", sets: 3, min: 6, max: 10, kg: 55, inc: 2.5, rest: 150, since: "2026-11-13" },
     { k: "smithrow",  name: "Smith machine rows", note: "Přítahy vlastní vahou pod osou Smithova stroje.", sets: 3, min: 6, max: 10, kg: null, inc: 2.5, noProg: true, rest: 90 },
-    { k: "lunge",     name: "Walking lunges", note: "Chůze s jednoručkami 2 × 5 kg. Opakování = kroky na každou nohu.", sets: 3, min: 6, max: 10, kg: 5, inc: 2.5, perHand: true, rest: 120 },
-    { k: "lyingcurl", name: "Lying leg curls", note: "Dolů pomalu, 3 s.", sets: 3, min: 6, max: 10, kg: 20, inc: 2.5, rest: 90 },
-    { k: "legraise",  name: "Supported leg lifts", sets: 3, min: 6, max: 10, kg: null, inc: 2.5, noProg: true, rest: 60 },
+    { k: "lunge",     name: "Walking lunges", note: "Chůze s jednoručkou v každé ruce. Opakování = kroky na každou nohu.", sets: 3, min: 6, max: 10, kg: 10, inc: 2.5, perHand: true, rest: 120, since: "2026-11-13" },
+    { k: "lyingcurl", name: "Lying leg curls", note: "Každé opakování dolů pomalu, 3 s.", sets: 3, min: 6, max: 10, kg: 24, inc: 2, rest: 90, since: "2026-11-13" },
+    { k: "legraise",  name: "Supported leg lifts", note: "Se zátěží mezi chodidly.", sets: 3, min: 6, max: 10, kg: 5, inc: 2.5, rest: 60, since: "2026-11-13" },
   ] },
   C: { title: "Day 3 · bonus", items: [
     { k: "hammer",  name: "Hammer pull-ups", note: "Úchop dlaněmi k sobě.", sets: 3, min: 10, max: 10, kg: null, inc: 2.5, band: "heavy", assist: true, rest: 120 },
