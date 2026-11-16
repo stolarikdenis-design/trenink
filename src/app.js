@@ -59,13 +59,13 @@ const PLANS = {
     { k: "incbench", name: "Bench press na horní prsa", note: "Lavice: posunutí 4 zezadu, dva kolíky.", sets: 15, min: 2, max: 2, kg: 50, inc: 2.5, bar: true, rest: 90 },
   ] },
   B: { title: "Day 1 · bench, dřep, RDL", items: [
-    { k: "bench",  name: "Bench press",       sets: 3, min: 5, max: 5,  kg: 55, inc: 2.5, bar: true, rest: 180, since: "2026-11-10" },
-    { k: "chin",   name: "Chin-ups",          sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120 },
-    { k: "dips",   name: "Dips",              sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120 },
-    { k: "row",    name: "Seated rows",       sets: 3, min: 6, max: 10, kg: 36, inc: 2, rest: 90, since: "2026-11-10" },
-    { k: "crunch", name: "Decline crunch",    note: "Se zátěží, kotouč na hrudi.", sets: 3, min: 6, max: 10, kg: 1.25, inc: 1.25, rest: 60, since: "2026-11-10" },
-    { k: "squat",  name: "High bar squat",    sets: 3, min: 6, max: 10, kg: 40, inc: 2.5, bar: true, rest: 150, since: "2026-11-10" },
-    { k: "rdl",    name: "Romanian deadlift", sets: 3, min: 6, max: 10, kg: 40, inc: 2.5, bar: true, rest: 120, since: "2026-11-10" },
+    { k: "bench",  name: "Bench press",       sets: 3, min: 5, max: 5,  kg: 57.5, inc: 2.5, bar: true, rest: 180, since: "2026-11-16" },
+    { k: "chin",   name: "Chin-ups",          sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120, since: "2026-11-16" },
+    { k: "dips",   name: "Dips",              sets: 3, min: 6, max: 10, kg: null, inc: 2.5, band: "medium", assist: true, rest: 120, since: "2026-11-16" },
+    { k: "row",    name: "Seated rows",       sets: 3, min: 6, max: 10, kg: 40, inc: 2, rest: 90, since: "2026-11-16" },
+    { k: "crunch", name: "Decline crunch",    note: "Se zátěží, kotouč na hrudi.", sets: 3, min: 6, max: 10, kg: 1.25, inc: 1.25, rest: 60, since: "2026-11-16" },
+    { k: "squat",  name: "High bar squat",    sets: 3, min: 6, max: 10, kg: 40, inc: 2.5, bar: true, rest: 150, since: "2026-11-16" },
+    { k: "rdl",    name: "Romanian deadlift", sets: 3, min: 6, max: 10, kg: 40, inc: 2.5, bar: true, rest: 120, since: "2026-11-16" },
   ] },
   D: { title: "Day 2 · jednoručky, smith, výpady", items: [
     { k: "dbpress",   name: "Seated dumbbell press", note: "Váha je na jednu ruku.", sets: 3, min: 6, max: 10, kg: 10, inc: 2.5, perHand: true, rest: 120, since: "2026-11-13" },
@@ -263,8 +263,11 @@ function suggest(p, exceptId) {
   /* the coach changed this exercise after the last time it was done: his numbers win */
   const at = lastAt(p.k, exceptId);
   if (p.since && at && at.slice(0, 10) < p.since) {
+    /* same load as the normal suggestion: keep the rep progress, only mention the plan */
+    const g = suggest({ ...p, since: null }, exceptId);
+    if ((g.kg ?? null) === (p.kg ?? null) && (!p.band || g.band === p.band)) return { ...g, note: `Podle plánu od ${p.since.slice(8, 10).replace(/^0/, "")}. ${p.since.slice(5, 7).replace(/^0/, "")}. ` + g.note };
     const was = setsTxt(last.sets.filter(x => x.done).map(x => ({ reps: x.reps, kg: kgOf(last, x) })), last.band);
-    return { ...base, band: p.band || last.band || "none", note: `Nový plán od ${p.since.slice(8, 10).replace(/^0/, "")}. ${p.since.slice(5, 7).replace(/^0/, "")}.: <b>${p.kg != null ? fmt(p.kg) + " kg" : "vlastní váha"}</b>. Minule ${was}.`, up: p.kg != null && last.kg != null && p.kg > last.kg };
+    return { ...base, band: p.band || last.band || "none", note: `Nový plán od ${p.since.slice(8, 10).replace(/^0/, "")}. ${p.since.slice(5, 7).replace(/^0/, "")}.: <b>${p.kg != null ? fmt(p.kg) + " kg" : p.band && p.band !== "none" ? "guma " + bandName(p.band) : "vlastní váha"}</b>. Minule ${was}.`, up: p.kg != null && last.kg != null && p.kg > last.kg };
   }
   const ls = last.sets.map(x => ({ reps: x.reps, kg: kgOf(last, x), done: x.done }));
   const done = ls.filter(x => x.done);
